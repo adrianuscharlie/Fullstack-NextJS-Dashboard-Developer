@@ -6,19 +6,20 @@ import { useRouter } from 'next/navigation';
 const Navbar = () => {
   const { data: session } = useSession();
   const [providers, setProviders] = useState(null);
-  const [render,setRender]=useState(true);
   useEffect(()=>{
     const setUpProviders = async () => {
       const response = await getProviders();
-      console.log(response);
       setProviders(response);
-      alert(response)
     };
+    setUpProviders();
   },[])
   const router = useRouter();
-  const handleSignOut=async()=>{
-    await signOut({redirect:false});
-    router.push('/login');
+  const  handleSignOut= async()=>{
+     await signOut({redirect:false});
+     router.push('/')
+  }
+  if(!session){
+    return <></>
   }
   return (
     <nav className='flex justify-between w-full pt-3 px-5'>

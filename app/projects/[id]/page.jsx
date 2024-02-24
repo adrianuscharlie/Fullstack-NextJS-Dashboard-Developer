@@ -9,9 +9,10 @@ const Project = () => {
   const searchParams = useSearchParams();
   const [project, setProject] = useState({});
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const router=useRouter();
   useEffect(() => {
     if(!session){
-      redirect('/login');
+      router.push('/')
     }
     const fetchProduct = async () => {
       const url = `${pathname}${searchParams}`;

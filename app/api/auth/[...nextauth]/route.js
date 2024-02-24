@@ -2,6 +2,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import User from "@/models/User";
+import { signOut,signIn } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 const handler = NextAuth({
   providers: [
