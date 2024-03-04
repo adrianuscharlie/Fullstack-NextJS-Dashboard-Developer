@@ -15,8 +15,8 @@ const Navbar = () => {
   },[])
   const router = useRouter();
   const  handleSignOut= async()=>{
-     await signOut({redirect:false});
-     router.push('/')
+     await signOut({redirect:true,callbackUrl:'/login'});
+     
   }
   if(!session){
     return <></>
@@ -24,9 +24,9 @@ const Navbar = () => {
   return (
     <nav className='flex justify-between w-full pt-3 px-5'>
         <Link href={"/"} className='flex gap-2 flex-center'>
-            <p className='font-bold text-green-800'>Dashboard KIS</p>
+            <p className='font-bold text-xl'>Dashboard KIS</p>
         </Link>
-        <div className='flex p-3'>
+        <div className='flex p-3 font-semibold'>
             <div className='flex gap-3 md:gap-5'>
                 <Link href={"/"}>Home</Link>
                 <Link href={"/projects"}>Projects</Link>

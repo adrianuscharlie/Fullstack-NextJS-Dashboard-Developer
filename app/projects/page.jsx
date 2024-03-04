@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ProjectsTable from "@/components/Projects";
 import Loading from "@/components/Loading";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 const Projects = () => {
@@ -11,10 +11,10 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const router = useRouter();
+  if(!session){
+    redirect('/login')
+  }
   useEffect(() => {
-    if (!session) {
-      router.push("/");
-    }
     const fetchProjects = async () => {
       try {
         const result = await fetch("/api/projects");

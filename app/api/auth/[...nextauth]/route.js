@@ -6,6 +6,7 @@ import { signOut,signIn } from "next-auth/react";
 import { redirect } from "next/navigation";
 
 const handler = NextAuth({
+  secret:process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: "Credentials",
@@ -29,20 +30,20 @@ const handler = NextAuth({
   }
   ,
   session: {
-    jwt: true,
-    strategy:"jwt"
-    
+    jwt:true
   },
   callbacks: {
-    async session(session, user) {
-      session.user=user
-      return session;
-    },
-    async jwt({ token, account, profile }) { 
-      if(account && account.type === "credentials") { //(2)
-        token.userId = account.providerAccountId; // this is Id that coming from authorize() callback 
+    async jwt({token,user,account}) {
+      if(user){
+        token.userId=user.username
       }
       return token;
+    },
+    async session({session,token}) {
+      if(token.userId){
+        session.id=token.userId
+      }
+      return session;
     },
   },
 });

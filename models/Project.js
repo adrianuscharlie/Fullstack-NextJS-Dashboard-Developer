@@ -3,7 +3,8 @@ class Project{
     constructor(data){
     this.id=data.id,
        this.project_name=data.project_name,
-       this.pic=data.pic,
+       this.developer=data.developer,
+       this.support=data.support,
        this.notes=data.notes,
        this.status=data.status
     }
@@ -17,8 +18,8 @@ class Project{
         return rows.length?new Project(rows[0]):null;
     }
 
-    static async findByDeveloperID(pic){
-        const rows=await executeQuery({query:'SELECT * FROM project WHERE pic=?',params:pic})
+    static async findByUsername(pic){
+        const rows=await executeQuery({query:'SELECT * FROM project WHERE developer=? or support=?',params:[pic,pic]})
         return rows.map(row=>new Project(row));
     }
 

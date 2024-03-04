@@ -30,14 +30,15 @@ const ProjectsTable = ({data}) => {
       router.push(`/projects/${projectID}`);
     }
   return (
-    <section className='projects w-full mb-24'>
-        <table className="table-auto gap-2 items-start justify-center border-collapse border border-slate-400">
+    <section className='projects w-full mb-24 flex justify-center items-center'>
+        <div className="flex justify-center items-center p-2 mx-auto">
+        <table className="table-auto gap-2 items-start justify-center items-center border-collapse border border-slate-400">
             <thead>
                 <tr>
                 <th>Project ID</th>
                 <th>Project Name</th>
-                <th>Project PIC</th>
-                <th>Project Notes</th>
+                <th>Project Developer</th>
+                <th>Project Support</th>
                 <th>Project Status</th>
                 <th>Action</th>
                 </tr>
@@ -47,14 +48,15 @@ const ProjectsTable = ({data}) => {
                     <tr className='' key={index}>
                     <td>{project.id}</td>
                     <td>{project.project_name}</td>
-                    <td>{project.pic}</td>
-                    <td><LongText text={project.notes} maxLength={200} /></td>
+                    <td>{project.developer}</td>
+                    <td>{project.support}</td>
                     <td>{project.status}</td>
                     <td><button onClick={()=>handleSubmit(project.id)} className='rounded-md bg-blue-500 px-2 py-1 text-white'>Details</button></td>
                     </tr>
                 ))}
             </tbody>
         </table>
+        </div>
     </section>
   )
 }

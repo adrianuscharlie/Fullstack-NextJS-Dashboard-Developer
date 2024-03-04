@@ -26,7 +26,6 @@
   
   .main:after {
     content: "";
-    background-image: url("/assets/images/grid.svg");
     z-index: 1;
     position: absolute;
     width: 100%;
@@ -64,7 +63,7 @@
 /* Tailwind Styles */
 
 .app {
-    @apply relative z-10 flex justify-center items-center flex-col max-w-7xl mx-auto sm:px-16 px-6;
+    @apply relative z-10 flex justify-center items-center flex-col mx-auto sm:px-16 px-6;
   }
   
   .black_btn {
@@ -160,5 +159,5 @@
   }
 
 th,td{
-  @apply border border-slate-300 px-2
+  @apply border border-slate-300 p-5
 }
