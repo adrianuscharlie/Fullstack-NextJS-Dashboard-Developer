@@ -13,7 +13,6 @@ const Navbar = () => {
     };
     setUpProviders();
   },[])
-  const router = useRouter();
   const  handleSignOut= async()=>{
      await signOut({redirect:true,callbackUrl:'/login'});
      
@@ -30,6 +29,7 @@ const Navbar = () => {
             <div className='flex gap-3 md:gap-5'>
                 <Link href={"/"}>Home</Link>
                 <Link href={"/projects"}>Projects</Link>
+                {session.user.role==='Admin'?<Link href={"/admin"}>Admin</Link>:null}
                 <button onClick={handleSignOut}>Logout</button>
             </div>
         </div>

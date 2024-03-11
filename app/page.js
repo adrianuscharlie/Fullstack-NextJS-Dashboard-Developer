@@ -7,37 +7,22 @@ import { useSession ,signIn} from "next-auth/react";
 import { redirect } from "next/navigation";
 
 export default function Home() {
-  const [user, setUser] = useState({
-    username: "",
-    email: "",
-    password: "",
-    role: "",
-    isActive: true,
-  });
-  const [projects, setProjects] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const [loadingProjects, setLoadingProjects] = useState(true);
   const { data: session } = useSession();
   if(!session){
     redirect('/login');
   }
+  const [user, setUser] = useState(session.user);
+  const [projects, setProjects] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(
-          `/api/users/${session.user.email}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        const data = await response.json();
-        setUser(data);
         const responseProject = await fetch(
-          `/api/projects/user/${data.username}`
+          `/api/projects/user/${user.username}`
         );
         if(responseProject.ok){
           const dataProject = await responseProject.json();
-          console.log(dataProject);
           setProjects(dataProject);
         }
       } catch (error) {
@@ -48,7 +33,7 @@ export default function Home() {
       }
     };
     fetchUserData();
-  }, [session]);
+  },[]);
   
   if (loadingUser || loadingProjects) {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator

@@ -83,7 +83,7 @@ const CommentCard = ({ data }) => {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="w-6 h-6"
+              className="w-6 h-6 text-slate-500"
             >
               <path
                 fillRule="evenodd"
@@ -100,7 +100,7 @@ const CommentCard = ({ data }) => {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-6 h-6"
+              className="w-6 h-6 text-yellow-500"
             >
               <path
                 strokeLinecap="round"
@@ -120,7 +120,7 @@ const CommentCard = ({ data }) => {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-6 h-6"
+              className="w-6 h-6 text-green-500"
             >
               <path
                 strokeLinecap="round"
@@ -129,7 +129,7 @@ const CommentCard = ({ data }) => {
               />
             </svg>
           )}
-          <p className="text-sm text-gray-600 capitalize">{comment.status}</p>
+          <p className="text-sm font-semibold text-gray-600 capitalize">{comment.status}</p>
         </div>
         <p className="text-sm text-gray-600 capitalize">{date}</p>
       </footer>

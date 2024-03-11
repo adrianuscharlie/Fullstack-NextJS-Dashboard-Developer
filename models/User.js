@@ -8,7 +8,7 @@ class User{
     }
 
     static async all(){
-        const [rows]=await executeQuery({query:'SELECT * FROM users'});
+        const rows=await executeQuery({query:'SELECT * FROM users'});
         return rows.map(row=>new User(row));
     }
     static async find(username){
@@ -16,7 +16,7 @@ class User{
         return rows.length?new User(rows[0]):null;
     }
     static async save(){
-        const [result] = await executeQuery('INSERT INTO users SET ?', this);
+        const result = await executeQuery('INSERT INTO users SET ?', this);
         this.id = result.insertId;
     }
 

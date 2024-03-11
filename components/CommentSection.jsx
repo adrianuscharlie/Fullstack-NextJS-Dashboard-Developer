@@ -92,7 +92,7 @@ const CommentSection = ({ project }) => {
           Comments {comments.length}
         </h2>
       </div>
-      {session.id === project.developer || session.id === project.support ? (
+      {session.id === project.developer || session.id === project.support || session.user.role==='Admin'? (
         <form className="mb-6" onSubmit={handleSubmitComment}>
           <div className="py-2 px-4 bg-white rounded-lg rounded-t-lg border border-gray-200">
             <label htmlFor="comment" className="sr-only">

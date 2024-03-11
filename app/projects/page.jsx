@@ -46,7 +46,7 @@ const Projects = () => {
           </h1>
           <p className="desc text-center">
             {
-              "Dashboard for managing and Monitoring all KIS group Projects. Below, is the list of projects that are already created and managed by you"
+              "Dashboard for managing and Monitoring all KIS group Projects. Below, is the list of projects that are already created and managed by KIS group"
             }
           </p>
           <ProjectsTable data={projects} />
