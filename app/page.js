@@ -1,64 +1,69 @@
-"use client";
+"use client"
 import Loading from "@/components/Loading";
-import ProjectsTable from "@/components/Projects";
-import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useSession ,signIn} from "next-auth/react";
-import { redirect } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import AdminPage from "@/components/AdminPage";
+import DashboardPage from "@/components/DashboardPage";
 
 export default function Home() {
-  const { data: session } = useSession();
-  if(!session){
-    redirect('/login');
-  }
-  const [user, setUser] = useState(session.user);
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState(null);
   const [projects, setProjects] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    setUser(session.user);
+
     const fetchUserData = async () => {
       try {
-        const responseProject = await fetch(
-          `/api/projects/user/${user.username}`
-        );
-        if(responseProject.ok){
-          const dataProject = await responseProject.json();
-          setProjects(dataProject);
+        const url = session.user.role === "Admin"
+          ? "/api/projects"
+          : `/api/projects/user/${session.user.username}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          setProjects(data);
+        } else {
+          throw new Error("Failed to fetch data");
         }
       } catch (error) {
         console.error("Error fetching user data:", error.message);
+        // Handle error gracefully
       } finally {
-        setLoadingProjects(false);
-        setLoadingUser(false);
+        setLoading(false);
       }
     };
+
     fetchUserData();
-  },[]);
-  
-  if (loadingUser || loadingProjects) {
-    return <Loading />; // You can replace this with a loading spinner or any other loading indicator
+  }, [session, status, router]);
+
+  if (loading) {
+    return <Loading />;
   }
+
+  if (!user || !projects) {
+    // Handle the case when user or projects are not yet loaded
+    return <Loading />;
+  }
+
+  const isAdmin = user.role === "Admin";
+
   return (
-    <section className="w-full flex-center flex-col py-10">
-      <h1 className="text-center text-4xl font-semibold">
-            Welcome to KIS Project Dashboard,
-            <span className="orange_gradient text-center capitalize">
-              {" "}
-              {user.username}
-            </span>
-          </h1>
-          <p className="desc text-center">
-            {
-              "Dashboard for managing and Monitoring all KIS group Projects. Below, is the list of projects that are already created and managed by you"
-            }
-          </p>
-          <>
-            {projects?(
-              <ProjectsTable data={projects} />
-            ):(
-              <h1>There is no project for you</h1>
-            )}
-            </>
-    </section>
+    <>
+      {isAdmin ? (
+        <AdminPage user={user} projects={projects} />
+      ) : (
+        <DashboardPage user={user} projects={projects} />
+      )}
+    </>
   );
 }

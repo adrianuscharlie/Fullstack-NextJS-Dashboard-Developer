@@ -6,7 +6,8 @@ class Project {
       (this.developer = data.developer),
       (this.support = data.support),
       (this.notes = data.notes),
-      (this.status = data.status);
+      (this.status = data.status),
+      (this.version=data.version);
   }
 
   static async all() {

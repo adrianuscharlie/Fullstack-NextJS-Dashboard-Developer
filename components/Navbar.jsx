@@ -4,6 +4,7 @@ import React, { useEffect,useState } from 'react'
 import { signIn, signOut, useSession, getProviders } from "next-auth/react";
 import { useRouter } from 'next/navigation';
 const Navbar = () => {
+  const router = useRouter();
   const { data: session } = useSession();
   const [providers, setProviders] = useState(null);
   useEffect(()=>{
@@ -14,8 +15,8 @@ const Navbar = () => {
     setUpProviders();
   },[])
   const  handleSignOut= async()=>{
-     await signOut({redirect:true,callbackUrl:'/login'});
-     
+     await signOut();
+     router.push('/login')
   }
   if(!session){
     return <></>
@@ -29,7 +30,6 @@ const Navbar = () => {
             <div className='flex gap-3 md:gap-5'>
                 <Link href={"/"}>Home</Link>
                 <Link href={"/projects"}>Projects</Link>
-                {session.user.role==='Admin'?<Link href={"/admin"}>Admin</Link>:null}
                 <button onClick={handleSignOut}>Logout</button>
             </div>
         </div>

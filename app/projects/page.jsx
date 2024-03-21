@@ -7,14 +7,19 @@ import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 const Projects = () => {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const router = useRouter();
-  if(!session){
-    redirect('/login')
-  }
   useEffect(() => {
+    if (status === 'loading') return; // Don't do anything while session is loading
+
+    if (!session) {
+      // Redirect to login page if not authenticated.
+      console.log(session,status)
+      router.push('/login'); // Ensure router is used within useEffect
+    }
+
     const fetchProjects = async () => {
       try {
         const result = await fetch("/api/projects");
@@ -31,7 +36,7 @@ const Projects = () => {
     };
 
     fetchProjects();
-  }, []);
+  }, [session, status, router]);
 
   if (loadingProjects) {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator

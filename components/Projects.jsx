@@ -32,7 +32,7 @@ const ProjectsTable = ({data}) => {
   return (
     <section className='projects w-full mb-24 flex justify-center items-center'>
         <div className="flex justify-center items-center p-2 mx-auto">
-        <table className="table-auto gap-2 items-start justify-center items-center border-collapse border border-slate-400">
+        <table className="table-auto gap-2  justify-center items-center border-collapse border border-slate-400">
             <thead>
                 <tr>
                 <th>Project ID</th>

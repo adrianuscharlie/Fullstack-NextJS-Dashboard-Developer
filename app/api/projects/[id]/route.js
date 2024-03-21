@@ -19,8 +19,9 @@ export const PUT = async (request) => {
   try {
     const data = await request.json();
     const project = new Project(data);
-    const existingProject = Project.find(project.id);
+    const existingProject = await Project.find(project.id);
     Object.assign(existingProject, project);
+    console.log(existingProject);
     const affectedRows = await Project.update(
       existingProject.id,
       existingProject

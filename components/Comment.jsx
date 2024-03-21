@@ -78,7 +78,7 @@ const CommentCard = ({ data }) => {
     <article className="p-6 text-base bg-white rounded-lg shadow-lg">
       <footer className="flex justify-between items-center mb-2">
         <div className="flex items-center justify-center gap gap-2">
-          <span className="inline-flex text-xl font-semibold items-center mr-3 text-sm text-gray-900 gap-5 capitalize">
+          <span className="inline-flex text-xl font-semibold items-center mr-3  text-gray-900 gap-5 capitalize">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"

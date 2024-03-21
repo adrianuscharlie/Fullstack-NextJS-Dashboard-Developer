@@ -1,8 +1,7 @@
 import "@/styles/globals.css";
-import SessionProvider from "@/components/SessionProvider";
+import Provider from "@/components/SessionProvider";
 import Navbar from "@/components/Navbar";
 import { useSession } from "next-auth/react";
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 export const metadata = {
   title: "Dashboard Project KIS",
@@ -10,11 +9,10 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const session=await getServerSession();
   return (
     <html lang="en">
       <body>
-        <SessionProvider session={session}>
+        <Provider>
         <div className="main">
             <div className="gradient"/>
           </div>
@@ -22,7 +20,7 @@ export default async function RootLayout({ children }) {
           <Navbar/>
           {children}
           </main>
-        </SessionProvider>
+        </Provider>
       </body>
     </html>
   );

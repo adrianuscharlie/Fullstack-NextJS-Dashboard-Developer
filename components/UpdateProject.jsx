@@ -6,7 +6,7 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const UpdateProject = ({ users }) => {
+const UpdateProject = ({ users,projects }) => {
   const [project, setProject] = useState({
     project_name: "",
     developer: "",
@@ -14,16 +14,7 @@ const UpdateProject = ({ users }) => {
     status: "Development",
     notes: "",
   });
-  const [projects, setProjects] = useState([]);
 
-  useEffect(() => {
-    const fetchProject = async () => {
-      const response = await fetch("/api/projects");
-      const data = await response.json();
-      setProjects(data);
-    };
-    fetchProject();
-  }, []);
   const router = useRouter();
   const handleProject = (e) => {
     const { name, value } = e.target;

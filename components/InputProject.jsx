@@ -14,6 +14,7 @@ const InputProject = ({ users }) => {
     support: "",
     status: "Development",
     notes: "",
+    version:"0.0.0.0"
   });
   const router = useRouter();
   const handleProject = (e) => {
