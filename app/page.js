@@ -10,7 +10,7 @@ export default function Home() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [user, setUser] = useState(null);
-  const [projects, setProjects] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,9 +25,9 @@ export default function Home() {
 
     const fetchUserData = async () => {
       try {
-        const url = session.user.role === "Admin"
+        const url = session.user.username === "admin"
           ? "/api/projects"
-          : `/api/projects/user/${session.user.username}`;
+          : `/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -37,8 +37,9 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error.message);
-        // Handle error gracefully
+        setProjects([])
       } finally {
+        console.log(user)
         setLoading(false);
       }
     };
@@ -50,12 +51,9 @@ export default function Home() {
     return <Loading />;
   }
 
-  if (!user || !projects) {
-    // Handle the case when user or projects are not yet loaded
-    return <Loading />;
-  }
+  
 
-  const isAdmin = user.role === "Admin";
+  const isAdmin = user.username === "admin";
 
   return (
     <>

@@ -13,8 +13,9 @@ const InputProject = ({ users }) => {
     developer: "",
     support: "",
     status: "Development",
-    notes: "",
-    version:"0.0.0.0"
+    details: "",
+    version: "0.0.0.0",
+    businessAnalyst: "",
   });
   const router = useRouter();
   const handleProject = (e) => {
@@ -76,10 +77,10 @@ const InputProject = ({ users }) => {
               Select an option
             </option>
             {users
-              .filter((user) => user.role === "Developer")
+              .filter((user) => user.role === "developer")
               .map((user, index) => (
-                <option key={index} value={user.username}>
-                  {user.username}
+                <option key={index} value={user.namaLengkap}>
+                  {user.namaLengkap}
                 </option>
               ))}
           </select>
@@ -101,28 +102,51 @@ const InputProject = ({ users }) => {
               Select an option
             </option>
             {users
-              .filter((user) => user.role === "Support")
+              .filter((user) => user.role === "support")
               .map((user, index) => (
-                <option key={index} value={user.username}>
-                  {user.username}
+                <option key={index} value={user.namaLengkap}>
+                  {user.namaLengkap}
                 </option>
               ))}
           </select>
         </div>
       </div>
       <div className=" p-4">
-        <label htmlFor="dropdown">Notes</label>
+        <label htmlFor="dropdown">Business Analyst</label>
+      </div>
+      <div className="p-4">
+        <div>
+          <select
+            id="dropdown"
+            onChange={handleProject}
+            value={project.businessAnalyst || ""}
+            name="businessAnalyst"
+            className="text-base p-2"
+          >
+            <option value="" disabled>
+              Select an option
+            </option>
+            {users.map((user, index) => (
+              <option key={index} value={user.namaLengkap}>
+                {user.namaLengkap}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className=" p-4">
+        <label htmlFor="dropdown">Details</label>
       </div>
       <div className=" p-4">
         <label htmlFor="comment" className="sr-only">
-          Your Comment
+          Input project details
         </label>
         <textarea
           onChange={handleProject}
           id="comment"
           className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
-          placeholder="Write a comment about the project...."
-          name="notes"
+          placeholder="Input project details......"
+          name="details"
           required
         />
         <button

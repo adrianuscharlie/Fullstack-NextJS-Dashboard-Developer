@@ -3,6 +3,8 @@ import Link from 'next/link'
 import React, { useEffect,useState } from 'react'
 import { signIn, signOut, useSession, getProviders } from "next-auth/react";
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Logo from "../public/logokis.jpg";
 const Navbar = () => {
   const router = useRouter();
   const { data: session } = useSession();
@@ -23,11 +25,11 @@ const Navbar = () => {
   }
   return (
     <nav className='flex justify-between w-full pt-3 px-5'>
-        <Link href={"/"} className='flex gap-2 flex-center'>
-            <p className='font-bold text-xl'>Dashboard KIS</p>
+        <Link href={"/"} className=''>
+            <Image alt="logo" src={Logo} style={{width:"100px"}}/>
         </Link>
         <div className='flex p-3 font-semibold'>
-            <div className='flex gap-3 md:gap-5'>
+            <div className='flex gap-3 md:gap-5 items-center'>
                 <Link href={"/"}>Home</Link>
                 <Link href={"/projects"}>Projects</Link>
                 <button onClick={handleSignOut}>Logout</button>

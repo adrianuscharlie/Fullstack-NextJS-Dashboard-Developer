@@ -11,12 +11,12 @@ const handler = NextAuth({
     Credentials({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
+        username: { label: "username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
         
-        const user = await User.login(credentials.email, credentials.password);
+        const user = await User.login(credentials.username, credentials.password);
         if (user) {
           return Promise.resolve(user); // Return user object on success
         } else {

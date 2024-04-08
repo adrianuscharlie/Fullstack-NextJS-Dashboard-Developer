@@ -3,6 +3,7 @@ import Loading from "./Loading";
 import stream from "stream";
 import { promisify } from "util";
 const CommentCard = ({ data }) => {
+  console.log(data)
   const [comment, setComment] = useState(data);
   const [files, setFiles] = useState([]);
   const [date, setDate] = useState("");
@@ -75,7 +76,7 @@ const CommentCard = ({ data }) => {
     }
   };
   return (
-    <article className="p-6 text-base bg-white rounded-lg shadow-lg">
+    <article className="p-6 text-base bg-slate-100 rounded-lg  m-5">
       <footer className="flex justify-between items-center mb-2">
         <div className="flex items-center justify-center gap gap-2">
           <span className="inline-flex text-xl font-semibold items-center mr-3  text-gray-900 gap-5 capitalize">
@@ -91,7 +92,7 @@ const CommentCard = ({ data }) => {
                 clipRule="evenodd"
               />
             </svg>
-            {comment.username}
+            {comment.author}
           </span>
           {comment.status === "Development" ? (
             <svg
@@ -143,7 +144,7 @@ const CommentCard = ({ data }) => {
             {files.map((file, index) => (
               <li key={index}>
                 <button
-                  className=" bg-slate-200 inline-flex font-semibold justify-start items-start items-center mr-3 text-sm text-gray-900 gap-2 bg-white p-1 rounded-md"
+                  className=" bg-slate-200 inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900 gap-2  p-1 rounded-md"
                   onClick={() => handleDownload(file)}
                 >
                   <svg

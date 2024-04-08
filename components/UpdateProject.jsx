@@ -64,7 +64,7 @@ const UpdateProject = ({ users,projects }) => {
             <option value="" disabled>
               Select an option
             </option>
-            {projects.map((project, index) => (
+            {projects.length!==0&&projects.map((project, index) => (
               <option key={index} value={project.project_name}>
                 {project.project_name}
               </option>
@@ -105,15 +105,15 @@ const UpdateProject = ({ users,projects }) => {
                 name="developer"
                 className="text-base p-2"
               >
-                <option value={project.developer} disabled>
-                  {project.developer}
+                <option value="" disabled>
+                  Developer
                 </option>
                 {users
-                  .filter((user) => user.role === "Developer")
-                  .filter((user) => user.username !== project.developer)
+                  .filter((user) => user.role === "developer")
+                  // .filter((user) => user.username !== project.developer)
                   .map((user, index) => (
-                    <option key={index} value={user.username}>
-                      {user.username}
+                    <option key={index} value={user.namaLengkap}>
+                      {user.namaLengkap}
                     </option>
                   ))}
               </select>
@@ -134,11 +134,36 @@ const UpdateProject = ({ users,projects }) => {
                   {project.support}
                 </option>
                 {users
-                  .filter((user) => user.role === "Support")
-                  .filter((user) => user.username !== project.support)
+                  .filter((user) => user.role === "support")
+                  // .filter((user) => user.username !== project.support)
                   .map((user, index) => (
-                    <option key={index} value={user.username}>
-                      {user.username}
+                    <option key={index} value={user.namaLengkap}>
+                      {user.namaLengkap}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+          <div className=" p-4">
+            <label htmlFor="dropdown">Business Analyst</label>
+          </div>
+          <div className="p-4">
+            <div>
+              <select
+                onChange={handleProject}
+                value={project.businessAnalyst || ""}
+                name="businessAnalyst"
+                className="text-base p-2"
+              >
+                <option value={project.support} disabled>
+                  {project.support}
+                </option>
+                {users
+                  // .filter((user) => user.role === "support")
+                  // .filter((user) => user.username !== project.support)
+                  .map((user, index) => (
+                    <option key={index} value={user.namaLengkap}>
+                      {user.namaLengkap}
                     </option>
                   ))}
               </select>

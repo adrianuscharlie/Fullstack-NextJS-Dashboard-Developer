@@ -3,7 +3,7 @@ import Project from "@/models/Project";
 
 export const GET=async(request,{params})=>{
     try{
-        const result=await Project.findByUsername(params.id)
+        const result=await Project.findByNamaLengkap(params.id)
         if(result.length===0){
             return new Response(JSON.stringify("No projects retrieved"),{status:404});
         }

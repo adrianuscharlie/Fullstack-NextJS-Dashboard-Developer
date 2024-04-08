@@ -3,8 +3,9 @@ class User{
     constructor(data){
         this.username=data.username,
         this.email=data.email,
-        this.role=data.role,
-        this.isActive=data.isActive
+        this.namaLengkap=data.namaLengkap,
+        this.isActive=data.isActive,
+        this.role=data.role
     }
 
     static async all(){
@@ -20,8 +21,8 @@ class User{
         this.id = result.insertId;
     }
 
-    static async login(email,password){
-        const rows=await executeQuery({query:'SELECT * FROM users WHERE email=? and password=?',params:[email,password]})
+    static async login(username,password){
+        const rows=await executeQuery({query:'SELECT * FROM users WHERE username=? and password=?',params:[username,password]})
         return rows.length?new User(rows[0]):null;
     }
 

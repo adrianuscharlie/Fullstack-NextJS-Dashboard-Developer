@@ -2,7 +2,8 @@ import executeQuery from "@/utils/db";
 import Project from "@/models/Project";
 export const GET = async (request, { params }) => {
   try {
-    const result = await Project.find(params.id);
+    const [project_name,version]=params.id.split("  ")
+    const result = await Project.findSpecific(project_name,version);
     if (result.length === 0) {
       return new Response(JSON.stringify("No projects retrieved"), {
         status: 404,

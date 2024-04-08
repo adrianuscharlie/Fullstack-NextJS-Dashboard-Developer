@@ -8,7 +8,7 @@ import { useSession, signIn } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 const DashboardPage = ({ user, projects }) => {
-    console.log(projects)
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     step: 1,
     option: "",
@@ -25,12 +25,12 @@ const DashboardPage = ({ user, projects }) => {
   const [selectedOption, setSelectedOption] = useState(null);
 
   useEffect(()=>{
-    if (user.role === "Developer") {
+    if (user.role === "developer") {
         const option = options.filter(
           (item) => item !== "Release BA UAT" && item !== "Release BA Release"
         );
         setOption(option);
-      } else if (session.user.role === "Support") {
+      } else if (session.user.role === "support") {
         const option = options.filter((item) => item !== "Release BA Development");
         setOption(option);
       } else {
@@ -48,48 +48,21 @@ const DashboardPage = ({ user, projects }) => {
   };
   // Fetch user data
   return (
-    <section className="pt-16 mb-10 w-full mx-auto">
-      <h1 className="orange_gradient text-4xl font-bold mb-10 capitalize">
-        {user.username} Dashboard
-      </h1>
-      <p className="font-semibold text-xl">
-        Manage your project from this page
+    <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
+        <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
+          {user.namaLengkap} Dashboard
+          <span className="capitalize"> KIS</span>
+        </h1>
+        <p className="text-start">
+        {
+          "Welcome, manage all project from your dashboard! Below are list of all project that you already managed"
+        }
       </p>
-      <div className="grid grid-cols-[1fr,3fr] gap-4 mt-10  text-lg">
-        {/* Replace the following divs with your actual content */}
-        <div className="p-4">
-          <label htmlFor="dropdown">Select an option:</label>
-        </div>
-        <div className="p-4">
-          <select
-            id="dropdown"
-            onChange={handleSelectChange}
-            value={selectedOption || ""}
-            className="text-base p-2"
-          >
-            <option value="" disabled>
-              Select an action
-            </option>
-            {option.map((option, index) => (
-              <option key={index} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      {formData.option === "View Project" && (
-        <>
-          {projects ? (
+      {projects ? (
             <ProjectsTable data={projects} />
           ) : (
             <h1>There is no project for you</h1>
           )}
-        </>
-      )}
-      {formData.option === "Release BA Development" && (
-        <ReleaseBADev projects={projects} />
-      )}
     </section>
   );
 };

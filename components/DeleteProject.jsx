@@ -1,7 +1,14 @@
+"use client";
 import React from "react";
 import { useState, useEffect } from "react";
-const DeleteProject = () => {
-  const [projects, setProjects] = useState([]);
+import {
+  useRouter,
+  useSearchParams,
+  usePathname,
+  redirect,
+} from "next/navigation";
+const DeleteProject = ({projects}) => {
+  const router=useRouter();
   const [project, setProject] = useState({
     project_name: "",
     developer: "",
@@ -9,14 +16,6 @@ const DeleteProject = () => {
     status: "",
     notes: "",
   });
-  useEffect(() => {
-    const fetchProject = async () => {
-      const response = await fetch("/api/projects");
-      const data = await response.json();
-      setProjects(data);
-    };
-    fetchProject();
-  }, []);
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
     const foundProject = projects.find(
@@ -31,20 +30,13 @@ const DeleteProject = () => {
     );
     if (userConfirmed) {
       alert("Deleting Project");
-      const response = await fetch(`/api/projects/${project.id}`, {
+      const response = await fetch(`/api/projects/${project.project_name}`, {
         method: "DELETE",
       });
       const { statusResponse, message } = await response.json();
       alert(message);
       if(response.ok){
-        setProjects(projects.filter(project=>project.id!==project.id));
-        setProject({
-            project_name: "",
-            developer: "",
-            support: "",
-            status: "",
-            notes: "",
-          })
+        router.push("/");
       }
     }
   };
@@ -67,7 +59,7 @@ const DeleteProject = () => {
             <option value="" disabled>
               Select an option
             </option>
-            {projects.map((project, index) => (
+            {projects.length!==0&&projects.map((project, index) => (
               <option key={index} value={project.project_name}>
                 {project.project_name}
               </option>

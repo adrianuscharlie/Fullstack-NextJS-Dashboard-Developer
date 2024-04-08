@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import BADevDoc from "./BADevDoc";
-import { BlobProvider } from "@react-pdf/renderer";
-const ReleaseBADev = ({ projects }) => {
+import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
+import BAUATDoc from "./BAUATDoc";
+const ReleaseBAUAT = ({ projects }) => {
   const [projectVersion, setProjectVersion] = useState([]);
   const [formData, setFormData] = useState({
     noDokumen: "",
@@ -13,37 +13,54 @@ const ReleaseBADev = ({ projects }) => {
     programTerkait: "",
     version: "",
     deskripsi: "",
-    partner: "",
+    lokasi: "",
+    peserta: "",
     dokumen: "",
     message:
-      "Sesuai dengan pengujian, maka Berita Acara Development telah selesai dilakukan finalisasi untuk sistem aplikasi di atas dan hasilnya DITERIMA",
+      "Sesuai dengan pengujian, maka User Acceptance Test(UAT) telah selesai dilakukan finalisasi untuk sistem aplikasi di atas dan hasilnya DITERIMA",
     attachment: "",
-    developer: "",
+    support: "",
     manager: "S.Handika Panudju",
+    itDirector: "Eddy Gunawan",
     businessAnalyst: "",
   });
-
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
     const selectedProject = projects.filter(
       (project) => project.project_name === projectName
     );
-    if(selectedProject.length===1){
+    if (selectedProject.length === 1) {
       setFormData((prevData) => ({
         ...prevData,
-        ["project_name"]: selectedProject[0].project_name,
-        ["version"]: selectedProject[0].version,
-        ["deskripsi"]: selectedProject[0].notes,
-        ["developer"]: selectedProject[0].developer,
-        ["businessAnalyst"]: selectedProject[0].businessAnalyst,
+        ["project_name"]: selectedProject.project_name,
+        ["version"]: selectedProject.version,
+        ["deskripsi"]: selectedProject.notes,
+        ["support"]: selectedProject.support,
+        ["businessAnalyst"]: selectedProject.businessAnalyst,
       }));
-    }else{
+    } else {
       setFormData((prevData) => ({
         ...prevData,
-        ["project_name"]: projectName,
+        ["project_name"]: selectedProject.project_name,
       }));
     }
     setProjectVersion(selectedProject);
+  };
+
+  const handleVersionChange = (e) => {
+    const version = e.target.value;
+    const foundProject = projectVersion.find(
+      (project) => project.version === version
+    );
+    console.log(foundProject);
+    setFormData((prevData) => ({
+      ...prevData,
+      ["project_name"]: foundProject.project_name,
+      ["version"]: foundProject.version,
+      ["deskripsi"]: foundProject.notes,
+      ["support"]: foundProject.support,
+      ["businessAnalyst"]: foundProject.businessAnalyst,
+    }));
   };
 
   const handleChange = (e) => {
@@ -64,23 +81,6 @@ const ReleaseBADev = ({ projects }) => {
       ["date"]: formatedDate,
     }));
   };
-
-  const handleVersionChange = (e) => {
-    const version = e.target.value;
-    const foundProject = projectVersion.find(
-      (project) => project.version === version
-    );
-    console.log(foundProject)
-    setFormData((prevData) => ({
-      ...prevData,
-      ["project_name"]: foundProject.project_name,
-      ["version"]: foundProject.version,
-      ["deskripsi"]: foundProject.notes,
-      ["developer"]: foundProject.developer,
-      ["businessAnalyst"]: foundProject.businessAnalyst,
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const currentDate = new Date();
@@ -95,15 +95,14 @@ const ReleaseBADev = ({ projects }) => {
       ...prevData,
       ["noDokumen"]: documentNumber,
       ["date"]: formatedDate,
-      ["developer"]: formData.developer,
+      ["support"]: formData.support,
       ["businessAnalyst"]: formData.businessAnalyst,
-      
     }));
   };
   return (
     <>
       <form
-        className="grid grid-cols-[1fr,3fr] gap-4 text-lg"
+        className="grid grid-cols-[1fr,3fr] gap-4 mt-10  text-lg"
         onSubmit={handleSubmit}
       >
         <div className="p-4">
@@ -115,13 +114,15 @@ const ReleaseBADev = ({ projects }) => {
               onChange={handleSelectedProject}
               value={formData.project_name || ""}
               name="project_name"
-              className="text-base p-2 bg-gray-100"
+              className="text-base p-2"
             >
               <option value="" disabled>
                 Select an option
               </option>
               {projects &&
-                Array.from(new Set(projects.map(obj => obj.project_name))).map((project_name) => (
+                Array.from(
+                  new Set(projects.map((obj) => obj.project_name))
+                ).map((project_name) => (
                   <option key={project_name} value={project_name}>
                     {project_name}
                   </option>
@@ -167,7 +168,7 @@ const ReleaseBADev = ({ projects }) => {
                       name="jenisTransaksi"
                       value={formData.jenisTransaksi}
                       onChange={handleChange}
-                      className="text-base w-full p-2 bg-gray-100"
+                      className="text-base w-full p-2"
                       placeholder="Masukan jenis transaksi"
                       required
                     />
@@ -184,22 +185,22 @@ const ReleaseBADev = ({ projects }) => {
                       name="programTerkait"
                       value={formData.programTerkait}
                       onChange={handleChange}
-                      className="text-base w-full p-2 bg-gray-100"
+                      className="text-base w-full p-2"
                       placeholder="Masukan program terkait..."
                       required
                     />
                   </div>
                 </div>
                 <div className="p-4">
-                  <label htmlFor="dropdown">Developer Name</label>
+                  <label htmlFor="dropdown">Support Name</label>
                 </div>
                 <div className="p-4">
                   <div>
                     <input
                       type="text"
                       id="inputField"
-                      name="developer"
-                      value={formData.developer}
+                      name="support"
+                      value={formData.support}
                       onChange={handleChange}
                       className="text-base w-full p-2"
                       disabled
@@ -223,6 +224,22 @@ const ReleaseBADev = ({ projects }) => {
                   </div>
                 </div>
                 <div className="p-4">
+                  <label htmlFor="dropdown">Project Version</label>
+                </div>
+                <div className="p-4">
+                  <div>
+                    <input
+                      type="text"
+                      id="inputField"
+                      name="version"
+                      value={formData.version}
+                      onChange={handleChange}
+                      className="text-base w-full p-2"
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="p-4">
                   <label htmlFor="dropdown">Deskripsi</label>
                 </div>
                 <div className="p-4">
@@ -230,7 +247,7 @@ const ReleaseBADev = ({ projects }) => {
                     <textarea
                       onChange={handleChange}
                       className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
-                      placeholder=" sukan nama peserta dipisahkan oleh enter"
+                      placeholder="Masukan nama peserta dipisahkan oleh enter"
                       name="deskripsi"
                       value={formData.deskripsi}
                       disabled
@@ -238,20 +255,46 @@ const ReleaseBADev = ({ projects }) => {
                   </div>
                 </div>
                 <div className="p-4">
-                  <label htmlFor="dropdown">Partner</label>
+                  <label htmlFor="dropdown">Lokasi</label>
                 </div>
                 <div className="p-4">
                   <div>
                     <input
                       type="text"
                       id="inputField"
-                      name="partner"
-                      value={formData.partner}
+                      name="lokasi"
+                      value={formData.lokasi}
                       onChange={handleChange}
-                      className="text-base w-full p-2 bg-gray-100"
-                      placeholder="Masukan Partner..."
+                      className="text-base w-full p-2"
+                      placeholder="Masukan lokasi..."
                       required
                     />
+                  </div>
+                </div>
+                <div className="p-4">
+                  <label htmlFor="dropdown">Peserta UAT</label>
+                </div>
+                <div className="p-4">
+                  <div>
+                    <textarea
+                      onChange={handleChange}
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      placeholder="Masukan list dokumen dipisahkan oleh enter"
+                      name="peserta"
+                      required
+                    />
+                  </div>
+                  <div className="flex p-2 items-center justify-start w-full">
+                    <ul className="flex justify-start items-center gap gap-2 w-ful">
+                      {formData.peserta.split("\n").map((doc, index) => (
+                        <li
+                          className="bg-slate-300 px-2 py-1 text-base rounded-md"
+                          key={index}
+                        >
+                          {doc}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
                 <div className="p-4">
@@ -261,7 +304,7 @@ const ReleaseBADev = ({ projects }) => {
                   <div>
                     <textarea
                       onChange={handleChange}
-                      className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
                       placeholder="Masukan list dokumen dipisahkan oleh enter"
                       name="dokumen"
                       required
@@ -271,7 +314,7 @@ const ReleaseBADev = ({ projects }) => {
                     <ul className="flex justify-start items-center gap gap-2 w-ful">
                       {formData.dokumen.split("\n").map((doc, index) => (
                         <li
-                          className="bg-gray-100 px-2 py-1 text-base rounded-md"
+                          className="bg-slate-300 px-2 py-1 text-base rounded-md"
                           key={index}
                         >
                           {doc}
@@ -285,9 +328,8 @@ const ReleaseBADev = ({ projects }) => {
                 </div>
                 <div className=" p-4">
                   <textarea
-                    //   onChange={handleProject}
                     id="comment"
-                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
                     placeholder="Message for this BA Development"
                     name="message"
                     required
@@ -311,22 +353,15 @@ const ReleaseBADev = ({ projects }) => {
                     type="submit"
                     className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg mt-4"
                   >
-                    <BlobProvider
-                      document={
-                        <BADevDoc
-                          formData={formData}
-                          filename={formData.noDokumen}
-                        />
-                      }
-                    >
-                      {({ url, ...rest }) => {
-                        return (
-                          <a href={url} target="_blank">
-                            Create BA Development
-                          </a>
-                        );
-                      }}
-                    </BlobProvider>
+                    <BlobProvider document={<BAUATDoc formData={formData} filename={formData.noDokumen} />}>
+                  {({ url, ...rest }) => {
+                    return (
+                      <a href={url} target="_blank">
+                        Create BA UAT
+                      </a>
+                    );
+                  }}
+                </BlobProvider>
                   </button>
                 </div>
               </>
@@ -334,20 +369,8 @@ const ReleaseBADev = ({ projects }) => {
           </>
         )}
       </form>
-      {/* <div className="w-full h-full flex justify-center items-center p-10">
-        <div className="w-full flex flex-col justify-center items-center p-10">
-          <h1 className="h1 text-lg font-bold mb-5">Preview Document</h1>
-
-          <PDFViewer
-            fileName={`BA Development ${formData.noDokumen}`}
-            style={{ width: "100%", height: "100vh" }}
-          >
-            <BADevDoc formData={formData} />
-          </PDFViewer>
-        </div>
-      </div> */}
     </>
   );
 };
 
-export default ReleaseBADev;
+export default ReleaseBAUAT;

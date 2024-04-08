@@ -25,7 +25,7 @@ export const POST = async (request) => {
       JSON.stringify({
         status: 200,
         message: "Success adding new Projects!",
-        id: resultID,
+        id: newProject.project_name,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
