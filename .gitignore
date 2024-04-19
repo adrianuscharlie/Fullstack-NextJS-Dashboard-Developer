@@ -27,8 +27,7 @@ yarn-error.log*
 
 # local env files
 .env*.local 
-appsettings.Development.json
-appsettings.json
+
 # vercel
 .vercel
 
@@ -38,3 +37,7 @@ next-env.d.ts
 
 # Ignore .env files
 .env
+
+# Ignore appsettings files
+appsettings.Development.json
+appsettings.json
