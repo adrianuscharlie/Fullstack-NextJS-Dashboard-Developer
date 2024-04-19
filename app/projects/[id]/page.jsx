@@ -30,7 +30,7 @@ const Project = () => {
     console.log(id);
     const fetchProject = async () => {
       try {
-        const result = await fetch(`/api/projects/${id}`);
+        const result = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${id}`);
         if (!result.ok) {
           throw new Error("Failed to fetch projects");
         }
@@ -63,7 +63,7 @@ const Project = () => {
       support: project.support,
       status: project.status,
     };
-    const response = await fetch(`/api/projects/${project.id}`, {
+    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${project.id}`, {
       method: "PUT",
       body: JSON.stringify(objectForm),
     });
@@ -78,10 +78,11 @@ const Project = () => {
       return false;
     }
   };
-  const handleVersionChange=(value)=>{
+  const handleVersionChange=(version,status)=>{
     setProject((previous) => ({
       ...previous,
-      ["version"]: value
+      ["version"]: version,
+      ["status"]:status
     }));
   }
   return (

@@ -52,7 +52,8 @@ const CommentCard = ({ data }) => {
 
   const handleDownload = async (file) => {
     const getRequest =
-      file.fileName + "_" + file.commentID + "_" + file.projectID;
+      file.fileName + "_" + file.commentID + "_" + file.project_name+"_"+file.version;
+    console.log(getRequest)
     const response = await fetch(`/api/files/${getRequest}`);
     if (response.ok) {
       const blob = await response.blob();

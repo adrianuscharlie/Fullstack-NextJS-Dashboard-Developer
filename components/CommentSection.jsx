@@ -4,20 +4,26 @@ import CommentCard from "./Comment";
 import { useSession } from "next-auth/react";
 import Loading from "./Loading";
 
-const CommentSection = ({ project ,handleVersionChange}) => {
+const CommentSection = ({ project, handleVersionChange }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loadingComments, setLoadingComments] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const options = ["Bugs", "Fixing Bugs"];
+  const choice = ["Bugs", "Fixing Bugs","Test Support","Test Release"];
+  const [options,setOptions]=useState(choice)
   const [selectedOption, setSelectedOption] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     const fetchComment = async () => {
+      if(session.user.role==='developer'){
+        setOptions(["Fixing Bugs","Test Support"])
+      }else if(session.user.role==='support'){
+        setOptions(["Bugs","Test Release"])
+      }
       try {
         const result = await fetch(
-          `/api/projects/${
+          process.env.NEXT_PUBLIC_BASE_URL +`/api/projects/${
             project.project_name + "  " + project.version
           }/comments`
         );
@@ -44,41 +50,47 @@ const CommentSection = ({ project ,handleVersionChange}) => {
       project_name: project.project_name,
       author: session.user.namaLengkap,
       text: text,
-      version:project.version,
+      version: project.version,
       status: selectedOption,
       filePath: "",
-      date: mysqlTimestamp,
+      
     };
     const response = await fetch(
-      `/api/projects/${
-        project.project_name + "  " + project.project_version
+      process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${
+        project.project_name + "  " + project.version
       }/comments`,
       {
         method: "POST",
+        headers: {
+          'Content-Type': 'application/json' // Set the Content-Type header to JSON
+        },
         body: JSON.stringify(commentObject),
       }
     );
-    handleVersionChange(commentObject.version);
+    handleVersionChange(commentObject.version,commentObject.status);
     const { statusResponse, message, id } = await response.json();
-    commentObject.id = id;
-    console.log(comments);
-    if (selectedFiles.length > 0) {
-      const formData = new FormData();
-      commentObject.folder = project.project_name;
-      // Append files to FormData
-      selectedFiles.forEach((file, index) => {
-        formData.append(`file_${id}_${index + 1}`, file);
-      });
-      // Append JSON object as a string
-      formData.append("header", JSON.stringify(commentObject));
-      const test = await fetch("/api/files/comments", {
-        method: "POST",
-        body: formData,
-      });
-      if (test.ok) {
-        alert("bisa");
-      } else {
-        alert("gagal");
+    if (response.ok) {
+      commentObject.id = id;
+      if (selectedFiles.length > 0) {
+        const formData = new FormData();
+        commentObject.folder = project.project_name;
+        // Append files to FormData
+        selectedFiles.forEach((file, index) => {
+          formData.append(`file_${id}_${index + 1}`, file);
+        });
+        // Append JSON object as a string
+        formData.append("header", JSON.stringify(commentObject));
+        const test = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/files", {
+          method: "POST",
+          body: formData,
+        });
+        if (test.ok) {
+          alert("bisa");
+        } else {
+          alert("gagal");
+        }
+      }else{
+        alert(message)
       }
     }
     setComments((prevItems) => [commentObject, ...prevItems]);

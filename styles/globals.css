@@ -9,3 +9,19 @@
 th,td{
   @apply border  p-2
 }
+
+.page{
+  height: 100vh;
+}
+
+.dropdown {
+  @apply absolute right-0 top-full mt-3 w-full p-5 rounded-lg bg-slate-100 min-w-[210px] flex flex-col gap-2 justify-end items-end;
+}
+
+.dropdown_link {
+  @apply text-sm  text-gray-700 hover:text-gray-500 font-medium;
+}
+
+.login{
+  height: 100vh;
+}

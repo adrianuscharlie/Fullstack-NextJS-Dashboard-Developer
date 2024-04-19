@@ -3,7 +3,8 @@ class File{
     constructor(data){
         this.fileName=data.fileName,
         this.commentID=data.commentID,
-        this.projectID=data.projectID,
+        this.project_name=data.project_name,
+        this.version=data.version,
         this.filePath=data.filePath
     }
 
@@ -16,13 +17,14 @@ class File{
         return rows.map(row=>new File(row));
     }
 
-    static async findByProjectID(projectID){
-        const rows=await executeQuery({query:'SELECT * FROM files WHERE projectID=?',params:projectID})
-        return rows.map(row=>new File(row));
-    }
+    // static async findByProjectID(projectID){
+    //     const rows=await executeQuery({query:'SELECT * FROM files WHERE projectID=?',params:projectID})
+    //     return rows.map(row=>new File(row));
+    // }
 
     static async singleDownload(params){
-        const rows= await executeQuery({query:'SELECT filePath FROM files WHERE fileName=? and commentID=? and projectID=?',params:params})
+        console.log(params)
+        const rows= await executeQuery({query:'SELECT filePath FROM files WHERE fileName=? and commentID=? and project_name=? and version=?',params:params})
         return rows.length?rows[0].filePath:null;
     }
 

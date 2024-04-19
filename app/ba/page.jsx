@@ -55,8 +55,8 @@ const CreateBA = () => {
     const fetchUserData = async () => {
       try {
         const url = session.user.username === "admin"
-          ? "/api/projects"
-          : `/api/projects/user/${session.user.namaLengkap}`;
+          ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
+          : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();

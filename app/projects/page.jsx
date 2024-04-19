@@ -26,11 +26,12 @@ const Projects = () => {
 
     const fetchProjects = async () => {
       try {
-        const result = await fetch("/api/projects");
+        const result = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/projects");
         if (!result.ok) {
           throw new Error("Failed to fetch projects");
         }
         const data = await result.json();
+        console.log(data)
         const orderedData = groupProjectsByProjectName(data);
         var dataFinal = {};
         Object.entries(orderedData).forEach(([key, value]) => {
@@ -72,7 +73,6 @@ const Projects = () => {
     }, {});
   }
   const toggleAccordion = (projectName) => {
-    console.log(projectName)
     setSearchResult((prevData) => ({
       ...prevData,
       [projectName]: {
@@ -104,7 +104,7 @@ const Projects = () => {
   return (
     <div>
       {session ? (
-        <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
+        <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
           <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
             List all project that managed by
             <span className="text-center capitalize"> KIS</span>

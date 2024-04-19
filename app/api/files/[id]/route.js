@@ -7,7 +7,7 @@ export const GET = async (request, { params }) => {
   try {
     const url=params.id;
     const split= url.split("_");
-    const [fileName,commentID,projectID]=split
+    const [fileName,commentID,project_name,version]=split
     const filePath = await File.singleDownload(split);
     console.log(filePath)
     if (fs.existsSync(filePath)) {

@@ -28,22 +28,25 @@ const InputProject = ({ users }) => {
   };
   const handleInput = async (event) => {
     event.preventDefault();
-    const response = await fetch(`/api/projects`, {
+    alert("Uploading new Project");
+    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +`/api/projects`, {
       method: "POST",
       body: JSON.stringify(project),
+      headers: {
+        'Content-Type': 'application/json' // Set the Content-Type header to JSON
+      },
     });
-    alert("Uploading new Project");
     if (response.ok) {
       const { statusResponse, message, id } = await response.json();
       alert(message);
-      router.push(`/projects/${id}`);
+      router.push(process.env.NEXT_PUBLIC_BASE_URL +`/projects/${project.project_name+"  "+project.version}`);
     } else {
       alert("gagal input new project");
     }
   };
   return (
     <form
-      className="grid grid-cols-[1fr,3fr] gap-4 mt-10  text-lg"
+      className="grid grid-cols-[1fr,3fr] gap-4 text-lg"
       onSubmit={handleInput}
     >
       <div className="p-4">
@@ -57,7 +60,8 @@ const InputProject = ({ users }) => {
             name="project_name"
             value={project.project_name}
             onChange={handleProject}
-            className="text-base w-full p-2 "
+            className="text-base w-full p-2 bg-gray-100"
+            placeholder="Enter project name..."
           />
         </div>
       </div>
@@ -71,7 +75,7 @@ const InputProject = ({ users }) => {
             onChange={handleProject}
             value={project.developer || ""}
             name="developer"
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an option
@@ -96,7 +100,7 @@ const InputProject = ({ users }) => {
             onChange={handleProject}
             value={project.support || ""}
             name="support"
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an option
@@ -121,7 +125,7 @@ const InputProject = ({ users }) => {
             onChange={handleProject}
             value={project.businessAnalyst || ""}
             name="businessAnalyst"
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an option
@@ -134,6 +138,22 @@ const InputProject = ({ users }) => {
           </select>
         </div>
       </div>
+      <div className="p-4">
+        <label htmlFor="dropdown">Version Notes</label>
+      </div>
+      <div className=" p-4">
+        <div>
+          <input
+            type="text"
+            id="inputField"
+            name="notes"
+            value={project.notes}
+            onChange={handleProject}
+            className="text-base w-full p-2 bg-gray-100"
+            placeholder="Enter note for this initial version"
+          />
+        </div>
+      </div>
       <div className=" p-4">
         <label htmlFor="dropdown">Details</label>
       </div>
@@ -144,14 +164,14 @@ const InputProject = ({ users }) => {
         <textarea
           onChange={handleProject}
           id="comment"
-          className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+          className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
           placeholder="Input project details......"
           name="details"
           required
         />
         <button
           type="submit"
-          className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-yellow-500 rounded-lg mt-4"
+          className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg mt-4"
         >
           Input Project
         </button>

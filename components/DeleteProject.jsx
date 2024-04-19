@@ -7,21 +7,42 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const DeleteProject = ({projects}) => {
-  const router=useRouter();
+const DeleteProject = ({ projects }) => {
+  const router = useRouter();
+  const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
     project_name: "",
-    developer: "",
-    support: "",
-    status: "",
-    notes: "",
+    version: "",
   });
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
-    const foundProject = projects.find(
+    const selectedProject = projects.filter(
       (project) => project.project_name === projectName
     );
-    setProject(foundProject);
+    if (selectedProject.length === 1) {
+      setProject((prevData) => ({
+        ...prevData,
+        ["project_name"]: selectedProject[0].project_name,
+        ["version"]: selectedProject[0].version,
+      }));
+    } else {
+      setProject((prevData) => ({
+        ...prevData,
+        ["project_name"]: projectName,
+      }));
+    }
+    setProjectVersion(selectedProject);
+  };
+  const handleVersionChange = (e) => {
+    const version = e.target.value;
+    const foundProject = projectVersion.find(
+      (project) => project.version === version
+    );
+    setProject((prevData) => ({
+      ...prevData,
+      ["project_name"]: foundProject.project_name,
+      ["version"]: foundProject.version,
+    }));
   };
   const handleDelete = async (event) => {
     event.preventDefault();
@@ -30,13 +51,17 @@ const DeleteProject = ({projects}) => {
     );
     if (userConfirmed) {
       alert("Deleting Project");
-      const response = await fetch(`/api/projects/${project.project_name}`, {
-        method: "DELETE",
-      });
-      const { statusResponse, message } = await response.json();
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL +
+          `/api/projects/${project.project_name + "  " + project.version}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const  {message}  = await response.json();
       alert(message);
-      if(response.ok){
-        router.push("/");
+      if (response.ok) {
+        router.push("/projects");
       }
     }
   };
@@ -54,25 +79,55 @@ const DeleteProject = ({projects}) => {
             onChange={handleSelectedProject}
             value={project.project_name || ""}
             name="project_name"
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an option
             </option>
-            {projects.length!==0&&projects.map((project, index) => (
-              <option key={index} value={project.project_name}>
-                {project.project_name}
-              </option>
-            ))}
+            {projects &&
+              Array.from(new Set(projects.map((obj) => obj.project_name))).map(
+                (project_name) => (
+                  <option key={project_name} value={project_name}>
+                    {project_name}
+                  </option>
+                )
+              )}
           </select>
         </div>
-        <button
-          type="submit"
-          className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-yellow-500 rounded-lg mt-4"
-        >
-          Delete Project
-        </button>
       </div>
+      {projectVersion.length > 0 && (
+        <>
+          <div className="p-4">
+            <label htmlFor="dropdown">Project Version</label>
+          </div>
+          <div className="p-4">
+            <div>
+              <select
+                onChange={handleVersionChange}
+                value={project.version || ""}
+                name="project_name"
+                className="text-base p-2 bg-gray-100"
+              >
+                <option value="" disabled>
+                  Select an option
+                </option>
+                {projectVersion &&
+                  projectVersion.map((project, index) => (
+                    <option key={index} value={project.version}>
+                      {project.version}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg mt-4"
+            >
+              Delete Project
+            </button>
+          </div>
+        </>
+      )}
     </form>
   );
 };

@@ -15,6 +15,7 @@ import ProjectsTable from "@/components/Projects";
 import ReleaseBADev from "@/components/ReleaseBADev";
 import ReleaseBAUAT from "./ReleaseBAUAT";
 import ReleaseBaRelease from "./ReleaseBARelease";
+import CreateUser from "./CreateUser";
 const AdminPage = ({user,projects}) => {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -23,9 +24,7 @@ const AdminPage = ({user,projects}) => {
     "Input",
     "Delete",
     "View Project",
-    "Release BA Development",
-    "Release BA UAT",
-    "Release BA Release",
+    "Create New User"
   ];
   const [selectedOption, setSelectedOption] = useState(null);
 
@@ -68,7 +67,7 @@ const AdminPage = ({user,projects}) => {
     }));
   };
   return (
-    <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
+    <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
         <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
           {user.namaLengkap} Dashboard
           <span className="capitalize"> KIS</span>
@@ -78,7 +77,7 @@ const AdminPage = ({user,projects}) => {
           "Welcome Admin, manage all project from your dashboard!"
         }
       </p>
-      <div className="grid grid-cols-[1fr,3fr] gap-4 mt-10  text-lg">
+      <div className="grid grid-cols-[1fr,3fr] gap-4  text-lg">
         {/* Replace the following divs with your actual content */}
         <div className="p-4">
           <label htmlFor="dropdown">Select an option:</label>
@@ -88,7 +87,7 @@ const AdminPage = ({user,projects}) => {
             id="dropdown"
             onChange={handleSelectChange}
             value={selectedOption || ""}
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an action
@@ -104,6 +103,7 @@ const AdminPage = ({user,projects}) => {
       {formData.option === "Input" && <InputProject users={users} />}
       {formData.option === "Update" && <UpdateProject users={users} projects={projects} />}
       {formData.option === "Delete" && <DeleteProject projects={projects} />}
+      {formData.option === "Create New User" && <CreateUser />}
       {formData.option === "View Project" && (
         <>
           {projects ? (
@@ -112,15 +112,6 @@ const AdminPage = ({user,projects}) => {
             <h1>There is no project for you</h1>
           )}
         </>
-      )}
-      {formData.option === "Release BA Development" && (
-        <ReleaseBADev projects={projects} />
-      )}
-      {formData.option==="Release BA UAT"&&(
-        <ReleaseBAUAT projects={projects}/>
-      )}
-      {formData.option==="Release BA Release"&&(
-        <ReleaseBaRelease projects={projects}/>
       )}
     </section>
   );

@@ -26,11 +26,11 @@ export default function Home() {
     const fetchUserData = async () => {
       try {
         const url = session.user.username === "admin"
-          ? "/api/projects"
-          : `/api/projects/user/${session.user.namaLengkap}`;
+          ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
+          : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
+        const data = await response.json();
         if (response.ok) {
-          const data = await response.json();
           setProjects(data);
         } else {
           throw new Error("Failed to fetch data");
@@ -39,7 +39,6 @@ export default function Home() {
         console.error("Error fetching user data:", error.message);
         setProjects([])
       } finally {
-        console.log(user)
         setLoading(false);
       }
     };
@@ -52,7 +51,6 @@ export default function Home() {
   }
 
   
-
   const isAdmin = user.username === "admin";
 
   return (

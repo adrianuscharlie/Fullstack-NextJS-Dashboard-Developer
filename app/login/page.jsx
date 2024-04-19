@@ -24,7 +24,7 @@ const Login = () => {
     }
 }
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+    <section className="flex bg-slate-100 login flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
       <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
         <Image width={100} src={Logo} alt="Logo KIS"/>
@@ -37,7 +37,7 @@ const Login = () => {
                 htmlFor="email"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
               >
-                Your email
+                Your username
               </label>
               <input
                 onChange={(e) => setUsername(e.target.value)}
@@ -68,14 +68,14 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full butt bg-gradient-to-br from-pink-500 to-orange-400 hover:bg-gradient-to-b   font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              className="w-full butt bg-sky-500   font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Sign in
             </button>
           </form>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

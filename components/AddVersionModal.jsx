@@ -40,17 +40,18 @@ const AddVersionModal = ({
     };
     const isValid = isVersionExist(projects, formData.version);
     if (!isValid) {
-      const response = await fetch(`/api/projects`, {
+      alert("Uploading New Project Version");
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects`, {
         method: "POST",
+        headers: {
+          'Content-Type': 'application/json' // Set the Content-Type header to JSON
+        },
         body: JSON.stringify(formData),
       });
-      alert("Uploading New Project Version");
+      const message=await response.text();
+      alert(message);
       if (response.ok) {
-        const { statusResponse, message, id } = await response.json();
-        alert(message);
         router.push("/projects/"+formData.project_name+"  "+formData.version)
-      } else {
-        alert("Failed To Upload New Project Version");
       }
     } else {
       alert("Duplicate Version");
