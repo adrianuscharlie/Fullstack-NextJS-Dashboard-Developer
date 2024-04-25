@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using Dashboard_Project;
 using System.Runtime.CompilerServices;
+using System.Data;
 
 namespace Dashboard_Project.Models
 {
@@ -13,12 +14,11 @@ namespace Dashboard_Project.Models
         public  string notes { get; set; }
         public string status { get; set; }
         public  string version { get; set; }
-        public  string businessAnalyst { get; set; }
         public  string details {  get; set; }
 
         public Project() { }
 
-        public Project(string project_name,string developer, string support ,string notes,string status, string version, string businessAnalyst, string details)
+        public Project(string project_name,string developer, string support ,string notes,string status, string version, string details)
         {
             this.project_name=project_name;
             this.developer=developer;
@@ -26,7 +26,6 @@ namespace Dashboard_Project.Models
             this.notes=notes;
             this.status=status;
             this.version=version;
-            this.businessAnalyst=businessAnalyst;
             this.details=details;
         }
 
@@ -52,7 +51,6 @@ namespace Dashboard_Project.Models
                                     notes = reader.GetString("notes"),
                                     status = reader.GetString("status"),
                                     version = reader.GetString("version"),
-                                    businessAnalyst = reader.GetString("businessAnalyst"),
                                     details = reader.GetString("details")
                                 };
                                 projects.Add(project);
@@ -90,7 +88,6 @@ namespace Dashboard_Project.Models
                                     notes = reader.GetString("notes"),
                                     status = reader.GetString("status"),
                                     version = reader.GetString("version"),
-                                    businessAnalyst = reader.GetString("businessAnalyst"),
                                     details = reader.GetString("details")
                                 };
                                 projects.Add(project);
@@ -112,7 +109,7 @@ namespace Dashboard_Project.Models
             {
                 using (MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
                 {
-                    string query = "INSERT INTO PROJECT (project_name,developer,support,notes,status,version,businessAnalyst,details) VALUES (@ProjectName,@Developer,@Support,@Notes,@Status,@Version,@BusinessAnalyst,@Details)";
+                    string query = "INSERT INTO PROJECT (project_name,developer,support,notes,status,version,details) VALUES (@ProjectName,@Developer,@Support,@Notes,@Status,@Version,@Details)";
                     using (MySqlCommand command = new(query, connection))
                     {
                         connection.Open();
@@ -122,7 +119,6 @@ namespace Dashboard_Project.Models
                         command.Parameters.AddWithValue("@Notes", notes);
                         command.Parameters.AddWithValue("@Status", status);
                         command.Parameters.AddWithValue("@Version", version);
-                        command.Parameters.AddWithValue("@BusinessAnalyst", businessAnalyst);
                         command.Parameters.AddWithValue("@Details", details);
                         int sucess = command.ExecuteNonQuery();
                         if (sucess > 0) return true;
@@ -136,6 +132,25 @@ namespace Dashboard_Project.Models
             }
         }
 
+        public static bool UpdateStatus(string status,string project_name,string version)
+        {
+            try
+            {
+                using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
+                {
+                    using(MySqlCommand command=new($"UPDATE PROJECT SET status='{status}' WHERE PROJECT_NAME='{project_name}' AND VERSION='{version}'",connection))
+                    {
+                        connection.Open();
+                        int success = command.ExecuteNonQuery();
+                        if (success > 0) return true;
+                        else return false;
+                    }
+                }
+            }catch(Exception ex)
+            {
+                return false;
+            }
+        }
         public static Project FindSpecific(string project_name,string version)
         {
             Project project = null;
@@ -160,7 +175,6 @@ namespace Dashboard_Project.Models
                                     notes = reader.GetString("notes"),
                                     status = reader.GetString("status"),
                                     version = reader.GetString("version"),
-                                    businessAnalyst = reader.GetString("businessAnalyst"),
                                     details = reader.GetString("details")
 
                                 };
@@ -177,26 +191,6 @@ namespace Dashboard_Project.Models
         }
 
 
-        public static bool  UpdateStatus(string project_name,string version,string status)
-        {
-            try
-            {
-                using (MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
-                {
-                    using(MySqlCommand command=new($"UPDATE project SET status='{status}' WHERE project_name = '{project_name}' and version='{version}'"))
-                    {
-                        connection.Open();
-                        int success=command.ExecuteNonQuery();
-                        if (success > 0) return true;
-                        else return false;
-                    }
-                }
-            }catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message.ToString());
-                return false;
-            }
-        }
 
         public static bool Delete(string project_name,string version)
         {
@@ -228,7 +222,7 @@ namespace Dashboard_Project.Models
             {
                 using (MySqlConnection connection = new MySqlConnection(Function.GetConfiguration("ApplicationSettings:connectionString")))
                 {
-                    string query = "UPDATE PROJECT SET developer = @Developer, support = @Support, notes = @Notes, status = @Status, businessAnalyst = @BusinessAnalyst, details = @Details WHERE project_name = @ProjectName AND version = @Version";
+                    string query = "UPDATE PROJECT SET developer = @Developer, support = @Support, notes = @Notes, status = @Status, details = @Details WHERE project_name = @ProjectName AND version = @Version";
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@ProjectName", project_name);
@@ -237,7 +231,6 @@ namespace Dashboard_Project.Models
                         command.Parameters.AddWithValue("@Notes", notes);
                         command.Parameters.AddWithValue("@Status", status);
                         command.Parameters.AddWithValue("@Version", version);
-                        command.Parameters.AddWithValue("@BusinessAnalyst", businessAnalyst);
                         command.Parameters.AddWithValue("@Details", details);
 
                         connection.Open();
@@ -250,6 +243,33 @@ namespace Dashboard_Project.Models
             {
                 Console.WriteLine(ex.ToString());
                 return false;
+            }
+        }
+
+        public static List<string> GetEmail(string projectName,string version)
+        {
+            try
+            {
+                List<string> emails= new List<string>();
+                using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
+                {
+                    using(MySqlCommand command=new($"SELECT developer,support from project where project_name='{projectName}' and version='{version}'", connection))
+                    {
+                        connection.Open();
+                        using(MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if(reader.Read())
+                            {
+                                emails.Add(reader.GetString("developer"));
+                                emails.Add(reader.GetString("support"));
+                            }
+                        }
+                    }
+                }
+                return emails;
+            }catch(Exception ex)
+            {
+                return null;
             }
         }
 

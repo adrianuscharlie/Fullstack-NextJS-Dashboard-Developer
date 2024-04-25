@@ -21,6 +21,7 @@ namespace Dashboard_Project.Controllers
 
             try
             {
+                Function.TraceLog("/api/heartbit", "[GET] Heartbit ", "Start Heartbit");
                 using (MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
                 {
                     var connectionStringBuilder = new MySqlConnectionStringBuilder(connection.ConnectionString);
@@ -41,7 +42,8 @@ namespace Dashboard_Project.Controllers
                     responseService.port = "";
                     responseService.server = "";
                     responseService.db = "";
-                    return StatusCode(200, responseService);
+                    Function.TraceLog("/api/heartbit", "[GET] Heartbit ", "Success Heartbit");
+                    return Ok(responseService);
                 }
             }
 
@@ -50,6 +52,7 @@ namespace Dashboard_Project.Controllers
                 responseService.err_code = "i303";
                 responseService.err_message = "Gagal connect ke DB";
                 responseService.catch_message = ex.Message;
+                Function.TraceLog("/api/heartbit", "[GET] Heartbit ", "Error Heartbit");
                 return StatusCode(500, responseService);
             }
         }

@@ -3,7 +3,9 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Loading from "@/components/Loading";
 const EmailPage = () => {
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { data: session, status } = useSession();
   const [formEmail, setFormEmail] = useState({
@@ -13,6 +15,10 @@ const EmailPage = () => {
     cc: "",
     from: "",
   });
+  const [emailRecipient, setEmailRecipient] = useState(new Set([]));
+  const [emailCC, setEmailCC] = useState(new Set([]));
+  const [ccText, setCcText] = useState("");
+  const [recippientText, setRecipientText] = useState("");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -25,14 +31,20 @@ const EmailPage = () => {
       ...prevData,
       ["from"]: session.user.email,
     }));
-    console.log(session.user)
+    console.log(session.user);
+    setLoading(false);
   }, [session, status, router]);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData();
-    formData.append("email",JSON.stringify(formEmail));
+    setFormEmail((prevData)=>({
+      ...prevData,
+      ["to"]:[...emailRecipient].join(";"),
+      ["cc"]:[...emailCC].join(";"),
+    }))
+    formData.append("email", JSON.stringify(formEmail));
     if (selectedFiles.length > 0) {
       selectedFiles.forEach((file, index) => {
         formData.append(`file_${index + 1}`, file);
@@ -42,8 +54,8 @@ const EmailPage = () => {
       method: "POST",
       body: formData,
     });
-    const message=await test.text();
-    alert(message)
+    const message = await test.text();
+    alert(message);
   };
 
   const handleChange = (e) => {
@@ -66,6 +78,9 @@ const EmailPage = () => {
     updatedFiles.splice(index, 1);
     setSelectedFiles(updatedFiles);
   };
+  if (loading) {
+    return <Loading />;
+  }
   return (
     <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
       <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
@@ -103,24 +118,29 @@ const EmailPage = () => {
         <div className="p-4">
           <div>
             <input
-              onChange={handleChange}
+              onChange={(event) => setRecipientText(event.target.value)}
               className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
-              placeholder="Masukan list email penerima dipisahkan oleh titik koma"
+              placeholder="Masukan email kemudian tekan enter"
               name="to"
+              value={recippientText}
+              onKeyPress={(event) => {
+                if (event.key === "Enter") {
+                  setEmailRecipient(
+                    new Set([...emailRecipient, recippientText])
+                  );
+                  setRecipientText(" ");
+                }
+              }}
               required
             />
           </div>
-          <div className="flex p-2 items-center justify-start w-full">
-            <ul className="flex justify-start items-center gap gap-2 w-ful">
-              {formEmail.to.split(";").map((person, index) => (
-                <li
-                  className="bg-gray-100 px-2 py-1 text-base rounded-md"
-                  key={index}
-                >
-                  {person}
-                </li>
+          <div className="flex items-center flex-wrap justify-start gap-3 mt-2">
+            {emailRecipient.size > 0 &&
+              [...emailRecipient].map((email) => (
+                <p className="bg-gray-100 p-2 rounded-md" key={email}>
+                  {email}
+                </p>
               ))}
-            </ul>
           </div>
         </div>
         <div className="p-4">
@@ -129,23 +149,27 @@ const EmailPage = () => {
         <div className="p-4">
           <div>
             <input
-              onChange={handleChange}
+              onChange={(event) => setCcText(event.target.value)}
               className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
-              placeholder="Masukan list email cc dipisahkan oleh titik koma"
+              placeholder="Masukan email kemudian tekan enter"
               name="cc"
+              value={ccText}
+              onKeyPress={(event) => {
+                if (event.key === "Enter") {
+                  setEmailCC(new Set([...emailCC, ccText]));
+                  setCcText(" ");
+                }
+              }}
+              
             />
           </div>
-          <div className="flex p-2 items-center justify-start w-full">
-            <ul className="flex justify-start items-center gap gap-2 w-ful">
-              {formEmail.cc.split(";").map((person, index) => (
-                <li
-                  className="bg-gray-100 px-2 py-1 text-base rounded-md"
-                  key={index}
-                >
-                  {person}
-                </li>
+          <div className="flex items-center flex-wrap justify-start gap-3 mt-2">
+            {emailCC.size > 0 &&
+              [...emailCC].map((email) => (
+                <p className="bg-gray-100 p-2 rounded-md" key={email}>
+                  {email}
+                </p>
               ))}
-            </ul>
           </div>
         </div>
         <div className=" p-4">

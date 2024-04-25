@@ -101,7 +101,7 @@ const ReleaseBaRelease = ({ projects }) => {
               onChange={handleSelectedProject}
               value={formData.project_name || ""}
               name="project_name"
-              className="text-base p-2"
+              className="text-base p-2 bg-gray-100"
             >
               <option value="" disabled>
                 Select an option
@@ -151,7 +151,7 @@ const ReleaseBaRelease = ({ projects }) => {
                   <textarea
                     onChange={handleChange}
                     id="comment"
-                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                     placeholder="Attachment for this BA Development"
                     name="informasi"
                     required

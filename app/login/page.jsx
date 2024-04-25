@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { redirect,useRouter } from "next/navigation";
 import Logo from "@/public/logokis.jpg"
 import Image from "next/image";
+import Link from "next/link";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -66,6 +67,7 @@ const Login = () => {
                 required=""
               />
             </div>
+            <div className="mt-1 px-2 text-black hover:text-sky-500 font-semibold"><Link href="/forgotPassword">Forgot Password?</Link></div>
             <button
               type="submit"
               className="w-full butt bg-sky-500   font-medium rounded-lg text-sm px-5 py-2.5 text-center"

@@ -11,6 +11,8 @@ namespace Dashboard_Project.Models
         public string role { get; set; }
         public bool isActive { get; set; }
 
+        public string salt { get; set; } = "";
+
         public User() { }
 
         public User (string namaLengkap, string username, string email,string password, string role, bool isActive)
@@ -28,18 +30,26 @@ namespace Dashboard_Project.Models
         {
             try
             {
+                PasswordManager passwordManager = new PasswordManager();
+
+                string password = this.password;
+                string salt = passwordManager.GenerateSalt();
+                string hashedPassword = passwordManager.HashPassword(password, salt);
+
+                
                 using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
                 {
-                    string query = "INSERT INTO USERS (username,password,email,namaLengkap,isActive,role) VALUES (@Username,@Password,@Email,@NamaLengkap,@IsActive,@Role)";
+                    string query = "INSERT INTO USERS (username,password,email,namaLengkap,isActive,role,salt) VALUES (@Username,@Password,@Email,@NamaLengkap,@IsActive,@Role,@Salt)";
                     using(MySqlCommand command = new(query, connection))
                     {
                         connection.Open();
                         command.Parameters.AddWithValue("@Username", username);
-                        command.Parameters.AddWithValue("@Password", password);
+                        command.Parameters.AddWithValue("@Password", hashedPassword);
                         command.Parameters.AddWithValue("@Email", email);
                         command.Parameters.AddWithValue("@NamaLengkap", namaLengkap);
                         command.Parameters.AddWithValue("@IsActive", isActive);
                         command.Parameters.AddWithValue("@Role", role);
+                        command.Parameters.AddWithValue("@Salt", salt);
                         int success=command.ExecuteNonQuery();
                         if (success > 0) return true;
                         else return false;
@@ -68,12 +78,13 @@ namespace Dashboard_Project.Models
                             {
                                 user = new User
                                 {
-                                    username=reader.GetString("username"),
-                                    namaLengkap=namaLengkap,
-                                    email=reader.GetString("email"),
-                                    role=reader.GetString("role"),
-                                    isActive=reader.GetBoolean("isActive"),
-                                    password=reader.GetString("password")
+                                    username = reader.GetString("username"),
+                                    namaLengkap = namaLengkap,
+                                    email = reader.GetString("email"),
+                                    role = reader.GetString("role"),
+                                    isActive = reader.GetBoolean("isActive"),
+                                    password = reader.GetString("password"),
+                                    salt = reader.GetString("salt")
                                 };
                             }
                         }
@@ -134,6 +145,42 @@ namespace Dashboard_Project.Models
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+
+        public string ForgotPassword()
+        {
+            try
+            {
+                Random random = new();
+                string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_";
+                char[] charPassword = new char[10];
+                for(int i = 0; i < charPassword.Length; i++)
+                {
+                    charPassword[i] = characters[random.Next(characters.Length)];
+                }
+                PasswordManager passwordManager = new PasswordManager();
+
+                string password = new string(charPassword);
+                string salt = passwordManager.GenerateSalt();
+                string hashedPassword = passwordManager.HashPassword(password, salt);
+
+                using (MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
+                {
+                    using (MySqlCommand command = new($"UPDATE USERS SET password='{hashedPassword}', salt='{salt}' WHERE email='{email}'", connection))
+                    {
+                        connection.Open();
+                        int success=command.ExecuteNonQuery();
+                        this.password = hashedPassword;
+                        if (success > 0) return password;
+                        else return null;
+                    }
+                }
+                return null;
+
+            }catch(Exception ex)
+            {
+                return null;
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using Org.BouncyCastle.Utilities;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Dashboard_Project.Models
 {
@@ -123,5 +124,50 @@ namespace Dashboard_Project.Models
                 return false;
             }
         }
+        public static string GetContentType(string fileExtension)
+        {
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(fileExtension, out string contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+            return contentType;
+        }
+
+
+        public static List<Files> FindByCommentID(string commentID)
+        {
+            try
+            {
+                List<Files> files = new();
+                using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
+                {
+                    using(MySqlCommand command=new($"SELECT * FROM FILES WHERE commentID='{commentID}'", connection))
+                    {
+                        connection.Open();
+                        using(MySqlDataReader reader=command.ExecuteReader())
+                        {
+                            while(reader.Read())
+                            {
+                                Files file = new Files
+                                {
+                                    fileName = reader.GetString("fileName"),
+                                    commentID = reader.GetString("commentID"),
+                                    project_name = reader.GetString("project_name"),
+                                    version = reader.GetString("version"),
+                                    filePath = reader.GetString("filePath")
+                                };
+                                files.Add(file);
+                            }
+                        }
+                    }
+                }
+                return files;
+
+            }catch(Exception ex)
+            {
+                return null;
+            }
+        } 
     }
 }

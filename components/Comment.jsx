@@ -11,7 +11,7 @@ const CommentCard = ({ data }) => {
   useEffect(() => {
     const fetchFile = async () => {
       try {
-        const response = await fetch(`/api/files/comments/${comment.id}`);
+        const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/files/comments/${comment.id}`);
         if (response.ok) {
           const data = await response.json();
           setFiles(data);
@@ -22,31 +22,6 @@ const CommentCard = ({ data }) => {
         setLoadingFiles(false);
       }
     };
-
-    const inputDate = new Date(comment.date);
-    // Extracting hours, minutes, day, month, and year
-    const hours = inputDate.getUTCHours();
-    const minutes = inputDate.getUTCMinutes();
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    // Extracting day, month, and year
-    const day = inputDate.getUTCDate();
-    const month = monthNames[inputDate.getUTCMonth()];
-    const year = inputDate.getUTCFullYear();
-    setDate(`${day} ${month} ${year}  ${hours}:${minutes} `);
     fetchFile();
   }, []);
 
@@ -54,7 +29,7 @@ const CommentCard = ({ data }) => {
     const getRequest =
       file.fileName + "_" + file.commentID + "_" + file.project_name+"_"+file.version;
     console.log(getRequest)
-    const response = await fetch(`/api/files/${getRequest}`);
+    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/files/${getRequest}`);
     if (response.ok) {
       const blob = await response.blob();
       // Create a blob URL for the file content
@@ -133,7 +108,7 @@ const CommentCard = ({ data }) => {
           )}
           <p className="text-sm font-semibold text-gray-600 capitalize">{comment.status}</p>
         </div>
-        <p className="text-sm text-gray-600 capitalize">{date}</p>
+        <p className="text-sm text-gray-600 capitalize">{comment.date}</p>
       </footer>
 
       <p className="text-gray-500 text-md" style={{ whiteSpace: "pre-line" }}>

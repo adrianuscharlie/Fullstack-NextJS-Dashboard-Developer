@@ -25,7 +25,7 @@ export default function Home() {
 
     const fetchUserData = async () => {
       try {
-        const url = session.user.username === "admin"
+        const url = session.user.role.includes ("manager")
           ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
           : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
@@ -51,8 +51,8 @@ export default function Home() {
   }
 
   
-  const isAdmin = user.username === "admin";
-
+  const isAdmin = user.role.includes("manager") ;
+  console.log(session.user)
   return (
     <>
       {isAdmin ? (

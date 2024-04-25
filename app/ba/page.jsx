@@ -54,7 +54,7 @@ const CreateBA = () => {
       }
     const fetchUserData = async () => {
       try {
-        const url = session.user.username === "admin"
+        const url = session.user.role.includes("manager")
           ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
           : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
@@ -139,10 +139,10 @@ const CreateBA = () => {
         </>
       )}
       {formData.option === "Release BA Development" && (
-        <ReleaseBADev projects={projects} />
+        <ReleaseBADev projects={projects} users={users}/>
       )}
       {formData.option==="Release BA UAT"&&(
-        <ReleaseBAUAT projects={projects}/>
+        <ReleaseBAUAT projects={projects} users={users}/>
       )}
       {formData.option==="Release BA Release"&&(
         <ReleaseBaRelease projects={projects}/>

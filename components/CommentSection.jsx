@@ -4,28 +4,38 @@ import CommentCard from "./Comment";
 import { useSession } from "next-auth/react";
 import Loading from "./Loading";
 
-const CommentSection = ({ project, handleVersionChange }) => {
+const CommentSection = ({ project, handleStatus }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loadingComments, setLoadingComments] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const choice = ["Bugs", "Fixing Bugs","Test Support","Test Release"];
-  const [options,setOptions]=useState(choice)
+  const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
+  const [options, setOptions] = useState(choice);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [emailCC, setEmailCC] = useState(
+    new Set([
+      // "handika_sp@indomaret.co.id",
+      // "bima_ans@indomaret.co.id",
+      // "hali.wimboko@indomaret.co.id",
+    ])
+  );
+  const [ccText, setCcText] = useState("");
+  const [isChecked, setChecked] = useState(false);
   useEffect(() => {
     const fetchComment = async () => {
-      if(session.user.role==='developer'){
-        setOptions(["Fixing Bugs","Test Support"])
-      }else if(session.user.role==='support'){
-        setOptions(["Bugs","Test Release"])
+      if (session.user.role === "developer") {
+        setOptions(["Fixing Bugs", "Test Support"]);
+      } else if (session.user.role === "support") {
+        setOptions(["Bugs", "Test Release"]);
       }
       try {
         const result = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL +`/api/projects/${
-            project.project_name + "  " + project.version
-          }/comments`
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/projects/${
+              project.project_name + "  " + project.version
+            }/comments`
         );
         if (result.ok) {
           const data = await result.json();
@@ -41,11 +51,6 @@ const CommentSection = ({ project, handleVersionChange }) => {
   }, []);
   const handleSubmitComment = async (event) => {
     event.preventDefault();
-    const currentTimestamp = Date.now();
-    const mysqlTimestamp = new Date(currentTimestamp)
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " ");
     const commentObject = {
       project_name: project.project_name,
       author: session.user.namaLengkap,
@@ -53,25 +58,27 @@ const CommentSection = ({ project, handleVersionChange }) => {
       version: project.version,
       status: selectedOption,
       filePath: "",
-      
     };
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${
-        project.project_name + "  " + project.version
-      }/comments`,
+      process.env.NEXT_PUBLIC_BASE_URL +
+        `/api/projects/${
+          project.project_name + "  " + project.version
+        }/comments`,
       {
         method: "POST",
         headers: {
-          'Content-Type': 'application/json' // Set the Content-Type header to JSON
+          "Content-Type": "application/json", // Set the Content-Type header to JSON
         },
         body: JSON.stringify(commentObject),
       }
     );
-    handleVersionChange(commentObject.version,commentObject.status);
-    const { statusResponse, message, id } = await response.json();
+    handleStatus(commentObject.status);
+    const { message, id, date } = await response.json();
     if (response.ok) {
       commentObject.id = id;
+      commentObject.date = date;
       if (selectedFiles.length > 0) {
+        alert("Uploading file into server....");
         const formData = new FormData();
         commentObject.folder = project.project_name;
         // Append files to FormData
@@ -80,23 +87,64 @@ const CommentSection = ({ project, handleVersionChange }) => {
         });
         // Append JSON object as a string
         formData.append("header", JSON.stringify(commentObject));
-        const test = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/files", {
-          method: "POST",
-          body: formData,
-        });
-        if (test.ok) {
-          alert("bisa");
-        } else {
-          alert("gagal");
-        }
-      }else{
-        alert(message)
+        const test = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/api/files",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        const uploadMessage = await test.text();
+        alert(uploadMessage);
+      } else {
+        alert(message);
       }
+      const emailResponse = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL +
+          `/api/email/${project.project_name}_${project.version}`
+      );
+      const { emailDeveloper, emailSupport } = await emailResponse.json();
+      var emailFrom = "";
+      var emailRecipient = "";
+      if (session.user.email === emailDeveloper) {
+        emailFrom = emailDeveloper;
+        emailRecipient = emailSupport;
+      } else {
+        emailFrom = emailSupport;
+        emailRecipient = emailDeveloper;
+      }
+      alert("Sending email notification, please wait for a moment...");
+      const emailObject = {
+        subject: `[${project.status}] Program ${project.project_name} Version ${project.version}`,
+        body: text,
+        from: emailFrom,
+        to: emailRecipient,
+        cc: [...emailCC].join(";"),
+      };
+      const formEmailData = new FormData();
+      formEmailData.append("email", JSON.stringify(emailObject));
+      if (selectedFiles.length > 0) {
+        selectedFiles.forEach((file, index) => {
+          formEmailData.append(`file_${index + 1}`, file);
+        });
+      }
+      const sendEmail = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
+        {
+          method: "POST",
+          body: formEmailData,
+        }
+      );
+      const emailMessage = await sendEmail.text();
+      alert(emailMessage);
     }
     setComments((prevItems) => [commentObject, ...prevItems]);
     setText("");
     setSelectedFiles([]);
-    alert(message);
+    setIsOpen(false);
+    setCcText("");
+    setEmailCC(new Set([]));
+    setSelectedOption(null);
   };
   const handleFileChange = (event) => {
     const files = event.target.files;
@@ -121,11 +169,12 @@ const CommentSection = ({ project, handleVersionChange }) => {
     //   option: selectedOption,
     // }));
   };
+
   return (
     <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
       {session.user.namaLengkap === project.developer ||
       session.user.namaLengkap === project.support ||
-      session.user.role === "admin" ? (
+      session.user.role.includes("manager") ? (
         <>
           <form
             className="mb-6 flex flex-col gap-3 bg-slate-100 p-5 rounded-md"
@@ -212,6 +261,56 @@ const CommentSection = ({ project, handleVersionChange }) => {
                   {/* Additional file-related information can be displayed here */}
                 </div>
               )}
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="checkbox"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                checked={isChecked}
+                value={isChecked}
+                onChange={(event) => setChecked(!isChecked)}
+              />
+              <label
+                htmlFor="checkbox"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Add notification cc email
+              </label>
+            </div>
+
+            {isChecked && (
+              <div className="flex items-center justify-start w-full p-2 gap-5">
+                <input
+                  className="w-1/2 p-2"
+                  type="email"
+                  name="ccText"
+                  value={ccText}
+                  placeholder="Input email cc and press enter"
+                  onChange={(event) => setCcText(event.target.value)}
+                  onKeyPress={(event) => {
+                    if (event.key === "Enter" && ccText.includes("@")) {
+                      event.preventDefault();
+                      setEmailCC((prevData) => new Set([...prevData, ccText]));
+                      setCcText(""); // Clear the input field after pressing Enter
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="flex items-center flex-wrap justify-start gap-3">
+              {isChecked &&
+                [...emailCC].map((email) => (
+                  <p className="bg-white p-2 rounded-md" key={email}>
+                    {email}
+                    <span className="text-red-500 ml-3 hover:cursor-pointer" onClick={()=>{
+                      const updatedEmailCC = new Set(emailCC);
+                      updatedEmailCC.delete(email);
+                      setEmailCC(updatedEmailCC);
+                    }}>x</span>
+                  </p>
+                ))}
             </div>
             <button
               type="submit"

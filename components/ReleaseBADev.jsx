@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import BADevDoc from "./BADevDoc";
 import { BlobProvider } from "@react-pdf/renderer";
-const ReleaseBADev = ({ projects }) => {
+const ReleaseBADev = ({ projects ,users}) => {
   const [projectVersion, setProjectVersion] = useState([]);
   const [formData, setFormData] = useState({
     noDokumen: "",
@@ -28,16 +28,15 @@ const ReleaseBADev = ({ projects }) => {
     const selectedProject = projects.filter(
       (project) => project.project_name === projectName
     );
-    if(selectedProject.length===1){
+    if (selectedProject.length === 1) {
       setFormData((prevData) => ({
         ...prevData,
         ["project_name"]: selectedProject[0].project_name,
         ["version"]: selectedProject[0].version,
         ["deskripsi"]: selectedProject[0].notes,
         ["developer"]: selectedProject[0].developer,
-        ["businessAnalyst"]: selectedProject[0].businessAnalyst,
       }));
-    }else{
+    } else {
       setFormData((prevData) => ({
         ...prevData,
         ["project_name"]: projectName,
@@ -70,14 +69,13 @@ const ReleaseBADev = ({ projects }) => {
     const foundProject = projectVersion.find(
       (project) => project.version === version
     );
-    console.log(foundProject)
+    console.log(foundProject);
     setFormData((prevData) => ({
       ...prevData,
       ["project_name"]: foundProject.project_name,
       ["version"]: foundProject.version,
       ["deskripsi"]: foundProject.notes,
       ["developer"]: foundProject.developer,
-      ["businessAnalyst"]: foundProject.businessAnalyst,
     }));
   };
 
@@ -97,7 +95,6 @@ const ReleaseBADev = ({ projects }) => {
       ["date"]: formatedDate,
       ["developer"]: formData.developer,
       ["businessAnalyst"]: formData.businessAnalyst,
-      
     }));
   };
   return (
@@ -121,7 +118,9 @@ const ReleaseBADev = ({ projects }) => {
                 Select an option
               </option>
               {projects &&
-                Array.from(new Set(projects.map(obj => obj.project_name))).map((project_name) => (
+                Array.from(
+                  new Set(projects.map((obj) => obj.project_name))
+                ).map((project_name) => (
                   <option key={project_name} value={project_name}>
                     {project_name}
                   </option>
@@ -201,7 +200,7 @@ const ReleaseBADev = ({ projects }) => {
                       name="developer"
                       value={formData.developer}
                       onChange={handleChange}
-                      className="text-base w-full p-2"
+                      className="text-base w-full p-2 bg-gray-100"
                       disabled
                     />
                   </div>
@@ -211,15 +210,22 @@ const ReleaseBADev = ({ projects }) => {
                 </div>
                 <div className="p-4">
                   <div>
-                    <input
-                      type="text"
-                      id="inputField"
-                      name="businessAnalyst"
-                      value={formData.businessAnalyst}
+                    <select
+                      id="dropdown"
                       onChange={handleChange}
-                      className="text-base w-full p-2"
-                      disabled
-                    />
+                      value={formData.businessAnalyst}
+                      name="businessAnalyst"
+                      className="text-base p-2 bg-gray-100"
+                    >
+                      <option value="" disabled>
+                        Select an option
+                      </option>
+                      {users.map((user, index) => (
+                        <option key={index} value={user.namaLengkap}>
+                          {user.namaLengkap}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="p-4">
@@ -229,7 +235,7 @@ const ReleaseBADev = ({ projects }) => {
                   <div>
                     <textarea
                       onChange={handleChange}
-                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                       placeholder=" sukan nama peserta dipisahkan oleh enter"
                       name="deskripsi"
                       value={formData.deskripsi}
@@ -302,7 +308,7 @@ const ReleaseBADev = ({ projects }) => {
                   <textarea
                     onChange={handleChange}
                     id="comment"
-                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-slate-100"
                     placeholder="Attachment for this BA Development"
                     name="attachment"
                     required

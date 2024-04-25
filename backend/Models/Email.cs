@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using Dashboard_Project.Controllers;
+using MySql.Data.MySqlClient;
 using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace Dashboard_Project.Models
@@ -82,5 +83,59 @@ namespace Dashboard_Project.Models
             }
         }
 
+
+        public static string FindByNamaLengkap(string namaLengkap)
+        {
+            try
+            {
+                List<string> emails = new();
+                using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
+                {
+                    using(MySqlCommand command=new($"SELECT email from USERS where namaLengkap='{namaLengkap}'",connection))
+                    {
+                        connection.Open();
+                        using(MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if(reader.Read())
+                            {
+                                return reader.GetString("email");
+                            }
+                            return null;
+                        }
+                    }
+                }
+            }catch(Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public bool SendForgotPassword()
+        {
+            try
+            {
+                using (MailMessage email = new())
+                {
+                    email.From = new MailAddress(from);
+                    email.To.Add(to);
+                 
+                    email.Subject = subject;
+                    email.Body = body;
+                    email.IsBodyHtml= true;
+                    using (SmtpClient client = new SmtpClient(Function.GetConfiguration("ApplicationSettings:EmailServerSend")))
+                    {
+                        client.Port = Convert.ToInt32(Function.GetConfiguration("ApplicationSettings:EmailPortSend"));
+                        client.Credentials = new NetworkCredential(Function.GetConfiguration("ApplicationSettings:EmailUserName"), Function.GetConfiguration("ApplicationSettings:EmailPass"));
+                        client.EnableSsl = true;
+                        client.Send(email);
+                    }
+                    return true;
+                }
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

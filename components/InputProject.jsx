@@ -15,7 +15,6 @@ const InputProject = ({ users }) => {
     status: "Development",
     details: "",
     version: "0.0.0.0",
-    businessAnalyst: "",
   });
   const router = useRouter();
   const handleProject = (e) => {
@@ -36,13 +35,11 @@ const InputProject = ({ users }) => {
         'Content-Type': 'application/json' // Set the Content-Type header to JSON
       },
     });
+    const message= await response.text();
+    alert(message)
     if (response.ok) {
-      const { statusResponse, message, id } = await response.json();
-      alert(message);
-      router.push(process.env.NEXT_PUBLIC_BASE_URL +`/projects/${project.project_name+"  "+project.version}`);
-    } else {
-      alert("gagal input new project");
-    }
+      router.push(`/projects/${project.project_name+"  "+project.version}`);
+    } 
   };
   return (
     <form
@@ -112,29 +109,6 @@ const InputProject = ({ users }) => {
                   {user.namaLengkap}
                 </option>
               ))}
-          </select>
-        </div>
-      </div>
-      <div className=" p-4">
-        <label htmlFor="dropdown">Business Analyst</label>
-      </div>
-      <div className="p-4">
-        <div>
-          <select
-            id="dropdown"
-            onChange={handleProject}
-            value={project.businessAnalyst || ""}
-            name="businessAnalyst"
-            className="text-base p-2 bg-gray-100"
-          >
-            <option value="" disabled>
-              Select an option
-            </option>
-            {users.map((user, index) => (
-              <option key={index} value={user.namaLengkap}>
-                {user.namaLengkap}
-              </option>
-            ))}
           </select>
         </div>
       </div>

@@ -122,7 +122,7 @@ namespace Dashboard_Project.Models
             {
                 using(MySqlConnection connection = new(Function.GetConfiguration("ApplicationSettings:connectionString")))
                 {
-                    string query= "INSERT INTO COMMENT (project_name,version,author,text,filePath,status,date) VALUES (@ProjectName,@Version,@Author,@Text,@FilePath,@Status,@Date)";
+                    string query= "INSERT INTO COMMENT (project_name,version,author,text,filePath,status,date) VALUES (@ProjectName,@Version,@Author,@Text,@FilePath,@Status,@Date);SELECT LAST_INSERT_ID();";
                     using (MySqlCommand command = new(query,connection))
                     {
                         connection.Open();
@@ -133,7 +133,7 @@ namespace Dashboard_Project.Models
                         command.Parameters.AddWithValue("@FilePath", filePath);
                         command.Parameters.AddWithValue("@Status", status);
                         command.Parameters.AddWithValue("@Date", DateTime.Now);
-                        int sucess = Convert.ToInt32(command.ExecuteNonQuery());
+                        int sucess = Convert.ToInt32(command.ExecuteScalar());
                         return sucess;
                     }
                 }

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
 import BAUATDoc from "./BAUATDoc";
-const ReleaseBAUAT = ({ projects }) => {
+const ReleaseBAUAT = ({ projects ,users}) => {
   const [projectVersion, setProjectVersion] = useState([]);
   const [formData, setFormData] = useState({
     noDokumen: "",
@@ -36,7 +36,6 @@ const ReleaseBAUAT = ({ projects }) => {
         ["version"]: selectedProject.version,
         ["deskripsi"]: selectedProject.notes,
         ["support"]: selectedProject.support,
-        ["businessAnalyst"]: selectedProject.businessAnalyst,
       }));
     } else {
       setFormData((prevData) => ({
@@ -59,7 +58,6 @@ const ReleaseBAUAT = ({ projects }) => {
       ["version"]: foundProject.version,
       ["deskripsi"]: foundProject.notes,
       ["support"]: foundProject.support,
-      ["businessAnalyst"]: foundProject.businessAnalyst,
     }));
   };
 
@@ -114,7 +112,7 @@ const ReleaseBAUAT = ({ projects }) => {
               onChange={handleSelectedProject}
               value={formData.project_name || ""}
               name="project_name"
-              className="text-base p-2"
+              className="text-base p-2 bg-gray-100"
             >
               <option value="" disabled>
                 Select an option
@@ -168,7 +166,7 @@ const ReleaseBAUAT = ({ projects }) => {
                       name="jenisTransaksi"
                       value={formData.jenisTransaksi}
                       onChange={handleChange}
-                      className="text-base w-full p-2"
+                      className="text-base w-full p-2 bg-gray-100"
                       placeholder="Masukan jenis transaksi"
                       required
                     />
@@ -185,7 +183,7 @@ const ReleaseBAUAT = ({ projects }) => {
                       name="programTerkait"
                       value={formData.programTerkait}
                       onChange={handleChange}
-                      className="text-base w-full p-2"
+                      className="text-base w-full p-2 bg-gray-100"
                       placeholder="Masukan program terkait..."
                       required
                     />
@@ -202,7 +200,7 @@ const ReleaseBAUAT = ({ projects }) => {
                       name="support"
                       value={formData.support}
                       onChange={handleChange}
-                      className="text-base w-full p-2"
+                      className="text-base w-full p-2 bg-gray-100"
                       disabled
                     />
                   </div>
@@ -212,31 +210,22 @@ const ReleaseBAUAT = ({ projects }) => {
                 </div>
                 <div className="p-4">
                   <div>
-                    <input
-                      type="text"
-                      id="inputField"
-                      name="businessAnalyst"
+                    <select
+                      id="dropdown"
+                      onChange={handleChange}
                       value={formData.businessAnalyst}
-                      onChange={handleChange}
-                      className="text-base w-full p-2"
-                      disabled
-                    />
-                  </div>
-                </div>
-                <div className="p-4">
-                  <label htmlFor="dropdown">Project Version</label>
-                </div>
-                <div className="p-4">
-                  <div>
-                    <input
-                      type="text"
-                      id="inputField"
-                      name="version"
-                      value={formData.version}
-                      onChange={handleChange}
-                      className="text-base w-full p-2"
-                      disabled
-                    />
+                      name="businessAnalyst"
+                      className="text-base p-2 bg-gray-100"
+                    >
+                      <option value="" disabled>
+                        Select an option
+                      </option>
+                      {users.map((user, index) => (
+                        <option key={index} value={user.namaLengkap}>
+                          {user.namaLengkap}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className="p-4">
@@ -246,7 +235,7 @@ const ReleaseBAUAT = ({ projects }) => {
                   <div>
                     <textarea
                       onChange={handleChange}
-                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                       placeholder="Masukan nama peserta dipisahkan oleh enter"
                       name="deskripsi"
                       value={formData.deskripsi}
@@ -265,7 +254,7 @@ const ReleaseBAUAT = ({ projects }) => {
                       name="lokasi"
                       value={formData.lokasi}
                       onChange={handleChange}
-                      className="text-base w-full p-2"
+                      className="text-base w-full p-2 bg-gray-100"
                       placeholder="Masukan lokasi..."
                       required
                     />
@@ -278,7 +267,7 @@ const ReleaseBAUAT = ({ projects }) => {
                   <div>
                     <textarea
                       onChange={handleChange}
-                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                       placeholder="Masukan list dokumen dipisahkan oleh enter"
                       name="peserta"
                       required
@@ -288,7 +277,7 @@ const ReleaseBAUAT = ({ projects }) => {
                     <ul className="flex justify-start items-center gap gap-2 w-ful">
                       {formData.peserta.split("\n").map((doc, index) => (
                         <li
-                          className="bg-slate-300 px-2 py-1 text-base rounded-md"
+                          className="bg-gray-100 px-2 py-1 text-base rounded-md"
                           key={index}
                         >
                           {doc}
@@ -304,7 +293,7 @@ const ReleaseBAUAT = ({ projects }) => {
                   <div>
                     <textarea
                       onChange={handleChange}
-                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                       placeholder="Masukan list dokumen dipisahkan oleh enter"
                       name="dokumen"
                       required
@@ -314,7 +303,7 @@ const ReleaseBAUAT = ({ projects }) => {
                     <ul className="flex justify-start items-center gap gap-2 w-ful">
                       {formData.dokumen.split("\n").map((doc, index) => (
                         <li
-                          className="bg-slate-300 px-2 py-1 text-base rounded-md"
+                          className="bg-gray-100 px-2 py-1 text-base rounded-md"
                           key={index}
                         >
                           {doc}
@@ -329,7 +318,7 @@ const ReleaseBAUAT = ({ projects }) => {
                 <div className=" p-4">
                   <textarea
                     id="comment"
-                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                     placeholder="Message for this BA Development"
                     name="message"
                     required
@@ -344,7 +333,7 @@ const ReleaseBAUAT = ({ projects }) => {
                   <textarea
                     onChange={handleChange}
                     id="comment"
-                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                     placeholder="Attachment for this BA Development"
                     name="attachment"
                     required

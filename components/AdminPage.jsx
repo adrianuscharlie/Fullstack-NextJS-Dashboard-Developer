@@ -20,9 +20,9 @@ const AdminPage = ({user,projects}) => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const options = [
-    "Update",
-    "Input",
-    "Delete",
+    "Update Project",
+    "Input Project",
+    "Delete Project",
     "View Project",
     "Create New User"
   ];
@@ -43,7 +43,7 @@ const AdminPage = ({user,projects}) => {
       console.log(session, status);
       router.push("/login"); // Ensure router is used within useEffect
     }
-    if (session.user.role !== "admin") {
+    if (!session.user.role.includes("manager")) {
       alert("Access Denied");
       router.push("/");
     }
@@ -100,9 +100,9 @@ const AdminPage = ({user,projects}) => {
           </select>
         </div>
       </div>
-      {formData.option === "Input" && <InputProject users={users} />}
-      {formData.option === "Update" && <UpdateProject users={users} projects={projects} />}
-      {formData.option === "Delete" && <DeleteProject projects={projects} />}
+      {formData.option === "Input Project" && <InputProject users={users} />}
+      {formData.option === "Update Project" && <UpdateProject users={users} projects={projects} />}
+      {formData.option === "Delete Project" && <DeleteProject projects={projects} />}
       {formData.option === "Create New User" && <CreateUser />}
       {formData.option === "View Project" && (
         <>
