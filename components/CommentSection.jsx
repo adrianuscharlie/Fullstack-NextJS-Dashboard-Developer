@@ -164,10 +164,6 @@ const CommentSection = ({ project, handleStatus }) => {
   const handleSelectChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);
-    // setFormData((prevData) => ({
-    //   ...prevData,
-    //   option: selectedOption,
-    // }));
   };
 
   return (
