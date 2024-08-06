@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-const EditProfile = ({ user }) => {
+const EditProfile = ({ user,handleSetLoading }) => {
   const [userData, setUserData] = useState(user);
   const handleUser = (e) => {
     const { name, value } = e.target;
@@ -17,6 +17,7 @@ const EditProfile = ({ user }) => {
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
+    handleSetLoading(true);
     const response =await fetch(
       process.env.NEXT_PUBLIC_BASE_URL + `/api/user/edit__${user.namaLengkap}`,
       {
@@ -28,10 +29,12 @@ const EditProfile = ({ user }) => {
       }
     );
     const message=await response.text();
+    handleSetLoading(false);
     alert(message);
     if(response.ok){
         alert("Will be redirect into login page to login again");
         signOut();
+        router.push("/login");
     }
   };
   return (

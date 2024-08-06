@@ -13,8 +13,7 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     support: project.support,
     status: project.status,
   });
-  const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
-  const [options, setOptions] = useState(choice);
+  const [options, setOptions] = useState(["Development","Bugs", "Fixing Bugs","SIT","UAT", "Test Support", "Release"]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -49,8 +48,8 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     const text=await result.text();
     alert(text);
     if (result.ok){
-        onclose
-
+      handleSubmit(formData)
+      onClose()
     }
   };
   return (

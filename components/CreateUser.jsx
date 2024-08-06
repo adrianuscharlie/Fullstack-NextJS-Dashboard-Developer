@@ -7,7 +7,7 @@ import {
   redirect,
 } from "next/navigation";
 
-const CreateUser = () => {
+const CreateUser = ({handleSetLoading}) => {
   const router = useRouter();
   const [userData, setUserData] = useState({
     username: "",
@@ -28,6 +28,8 @@ const CreateUser = () => {
 
   const handleSubmit=async(event)=>{
     event.preventDefault();
+    alert("Creating new user!")
+    handleSetLoading(true);
     const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +`/api/user`, {
       method: "POST",
       body: JSON.stringify(userData),
@@ -38,6 +40,7 @@ const CreateUser = () => {
     
     if(response.ok) alert("Success creating new user!")
     else alert("Failed to create new user")
+  handleSetLoading(false);
   }
 
   return (
@@ -110,6 +113,8 @@ const CreateUser = () => {
             </option>
             <option value="developer">Developer</option>
             <option value="support">Support</option>
+            <option value="manager">Manager</option>
+            <option value="ba_dev">Business Analyst</option>
           </select>
         </div>
       </div>

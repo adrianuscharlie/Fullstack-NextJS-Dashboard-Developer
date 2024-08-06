@@ -3,7 +3,6 @@ import Loading from "./Loading";
 import stream from "stream";
 import { promisify } from "util";
 const CommentCard = ({ data }) => {
-  console.log(data)
   const [comment, setComment] = useState(data);
   const [files, setFiles] = useState([]);
   const [date, setDate] = useState("");
@@ -23,12 +22,13 @@ const CommentCard = ({ data }) => {
       }
     };
     fetchFile();
+    const datetime = new Date(comment.date);
+    setDate(`${('0' + datetime.getHours()).slice(-2)}:${('0' + datetime.getMinutes()).slice(-2)} ${('0' + datetime.getDate()).slice(-2)}/${('0' + (datetime.getMonth() + 1)).slice(-2)}/${datetime.getFullYear()}`)
   }, []);
 
   const handleDownload = async (file) => {
     const getRequest =
       file.fileName + "_" + file.commentID + "_" + file.project_name+"_"+file.version;
-    console.log(getRequest)
     const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/files/${getRequest}`);
     if (response.ok) {
       const blob = await response.blob();
@@ -108,7 +108,7 @@ const CommentCard = ({ data }) => {
           )}
           <p className="text-sm font-semibold text-gray-600 capitalize">{comment.status}</p>
         </div>
-        <p className="text-sm text-gray-600 capitalize">{comment.date}</p>
+        <p className="text-sm text-gray-600 capitalize">{date}</p>
       </footer>
 
       <p className="text-gray-500 text-md" style={{ whiteSpace: "pre-line" }}>

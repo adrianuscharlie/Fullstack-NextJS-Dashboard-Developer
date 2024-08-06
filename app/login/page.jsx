@@ -1,29 +1,48 @@
 "use client"
 import React from "react";
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState,useEffect } from "react";
+import { signIn ,signOut} from "next-auth/react";
 import { redirect,useRouter } from "next/navigation";
 import Logo from "@/public/logokis.jpg"
 import Image from "next/image";
 import Link from "next/link";
+import Loading from "@/components/Loading";
+import { useSession } from "next-auth/react";
 
 const Login = () => {
+  const { data: session, status } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router=useRouter();
+
+  useEffect(()=>{
+    if (session) {
+      router.push("/");
+      return;
+    }
+  },[session])
   const handleLogin=async(event)=>{
     event.preventDefault();
+    setLoading(true);
     const result=await signIn('credentials',{
         redirect:false,
         username,
         password
     })
+    setLoading(false);
     if(result.ok){
       router.push('/')
     }else{
       alert("Login failed");
     }
 }
+
+
+if(loading){
+  return <Loading />
+}
+
   return (
     <section className="flex bg-slate-100 login flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
       <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">

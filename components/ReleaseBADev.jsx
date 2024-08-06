@@ -69,7 +69,6 @@ const ReleaseBADev = ({ projects ,users}) => {
     const foundProject = projectVersion.find(
       (project) => project.version === version
     );
-    console.log(foundProject);
     setFormData((prevData) => ({
       ...prevData,
       ["project_name"]: foundProject.project_name,

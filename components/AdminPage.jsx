@@ -27,7 +27,7 @@ const AdminPage = ({user,projects}) => {
     "Create New User"
   ];
   const [selectedOption, setSelectedOption] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     step: 1,
     option: "",
@@ -37,18 +37,17 @@ const AdminPage = ({user,projects}) => {
   const [users, setUsers] = useState([]);
   useEffect(() => {
     if (status === "loading") return; // Don't do anything while session is loading
-
+    setLoading(false);
     if (!session) {
       // Redirect to login page if not authenticated.
-      console.log(session, status);
       router.push("/login"); // Ensure router is used within useEffect
     }
-    if (!session.user.role.includes("manager")) {
+    if (!(session.user.role.includes("manager") || session.user.role.includes("ba_dev"))) {
       alert("Access Denied");
       router.push("/");
     }
     const fetchUsers = async () => {
-      const userResponse = await fetch("/api/users");
+      const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user");
       const data = await userResponse.json();
       setUsers(data);
     };
@@ -56,6 +55,9 @@ const AdminPage = ({user,projects}) => {
   }, [session, status, router]);
   if (status == "loading") {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator
+  }
+  if(loading){
+    return <Loading />
   }
 
   const handleSelectChange = (e) => {
@@ -66,16 +68,17 @@ const AdminPage = ({user,projects}) => {
       option: selectedOption,
     }));
   };
+
+  const handleSetLoading=(value)=>{
+    setLoading(value)
+  }
   return (
     <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
         <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
           {user.namaLengkap} Dashboard
-          <span className="capitalize"> KIS</span>
         </h1>
         <p className="text-start">
-        {
-          "Welcome Admin, manage all project from your dashboard!"
-        }
+        Welcome {user.namaLengkap}, manage all project from your dashboard!
       </p>
       <div className="grid grid-cols-[1fr,3fr] gap-4  text-lg">
         {/* Replace the following divs with your actual content */}
@@ -100,10 +103,10 @@ const AdminPage = ({user,projects}) => {
           </select>
         </div>
       </div>
-      {formData.option === "Input Project" && <InputProject users={users} />}
-      {formData.option === "Update Project" && <UpdateProject users={users} projects={projects} />}
-      {formData.option === "Delete Project" && <DeleteProject projects={projects} />}
-      {formData.option === "Create New User" && <CreateUser />}
+      {formData.option === "Input Project" && <InputProject users={users} handleSetLoading={handleSetLoading}/>}
+      {formData.option === "Update Project" && <UpdateProject users={users} projects={projects} handleSetLoading={handleSetLoading}/>}
+      {formData.option === "Delete Project" && <DeleteProject projects={projects} handleSetLoading={handleSetLoading}/>}
+      {formData.option === "Create New User" && <CreateUser handleSetLoading={handleSetLoading}/>}
       {formData.option === "View Project" && (
         <>
           {projects ? (

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-const ChangePassword = ({ user }) => {
+const ChangePassword = ({ user ,handleSetLoading}) => {
   const [formData, setFormData] = useState({
     namaLengkap: user.namaLengkap,
     password: "",
@@ -22,8 +22,8 @@ const ChangePassword = ({ user }) => {
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(formData)
     if(formData.newPassword==formData.confirm){
+      handleSetLoading(true);
       const response =await fetch(
         process.env.NEXT_PUBLIC_BASE_URL + `/api/user/changePassword_${user.namaLengkap}`,
         {
@@ -35,10 +35,13 @@ const ChangePassword = ({ user }) => {
         }
       );
       const message=await response.text();
+      handleSetLoading(false);
       alert(message);
       if(response.ok){
           alert("Will be redirect into login page to login again");
-          signOut();
+          await signOut();
+          router.push(process.env.NEXT_PUBLIC_BASE_URL+"/login");
+
       }
     }else{
       alert("New password must be match")
@@ -77,7 +80,7 @@ const ChangePassword = ({ user }) => {
             value={formData.password}
             onChange={handleForm}
             className="text-base w-full p-2 bg-gray-100"
-            placeholder="Enter new password..."
+            placeholder="Enter old password..."
             
           />
         </div>

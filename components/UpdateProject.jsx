@@ -6,43 +6,82 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const UpdateProject = ({ users,projects }) => {
+const UpdateProject = ({ users, projects ,handleSetLoading}) => {
+  const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
     project_name: "",
     developer: "",
     support: "",
+    version:"",
     status: "Development",
     notes: "",
+    details:"",
   });
+  const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
+  const [options, setOptions] = useState(choice);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const handleSelectedProject = (e) => {
+    const projectName = e.target.value;
+    const selectedProject = projects.filter(
+      (project) => project.project_name === projectName
+    );
+    if (selectedProject.length === 1) {
+      setProject((prevData) => ({
+        ...prevData,
+        ["project_name"]: selectedProject[0].project_name,
+        ["version"]: selectedProject[0].version,
+        ["developer"]:selectedProject[0].developer,
+      ["support"]:selectedProject[0].support,
+      ["details"]:selectedProject[0].details
+      }));
+    } else {
+      setProject((prevData) => ({
+        ...prevData,
+        ["project_name"]: projectName,
+      }));
+    }
+    setProjectVersion(selectedProject);
+  };
+  const handleVersionChange = (e) => {
+    const version = e.target.value;
+    const foundProject = projectVersion.find(
+      (project) => project.version === version
+    );
+    console.log(foundProject)
+    setProject((prevData) => ({
+      ...prevData,
+      ["project_name"]: foundProject.project_name,
+      ["version"]: foundProject.version,
+      ["developer"]:foundProject.developer,
+      ["support"]:foundProject.support,
+      ["details"]:foundProject.details
+    }));
+  };
 
   const router = useRouter();
   const handleProject = (e) => {
     const { name, value } = e.target;
-    console.log(name, value);
     setProject((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
-  const handleSelectedProject = (e) => {
-    const projectName = e.target.value;
-    const foundProject = projects.find(
-      (project) => project.project_name === projectName
-    );
-    setProject(foundProject);
-  };
   const handleInput = async (event) => {
     event.preventDefault();
-    const response = await fetch(`/api/projects/${project.id}`, {
+    alert("Updating Project");
+    handleSetLoading(true);
+    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${project.project_name}  ${project.version}`, {
       method: "PUT",
+      headers: {
+        'Content-Type': 'application/json' // Set the Content-Type header to JSON
+      },
       body: JSON.stringify(project),
     });
-    console.log(response.status);
-    alert("Updating Project");
-    const { statusResponse, message, id } = await response.json();
+    const message = await response.text();
+    handleSetLoading(false);
     alert(message);
     if (response.ok) {
-      router.push(`/projects/${id}`);
+      router.push(`/projects/${project.project_name}  ${project.version}`);
     }
   };
   return (
@@ -59,139 +98,143 @@ const UpdateProject = ({ users,projects }) => {
             onChange={handleSelectedProject}
             value={project.project_name || ""}
             name="project_name"
-            className="text-base p-2"
+            className="text-base p-2 bg-gray-100"
           >
             <option value="" disabled>
               Select an option
             </option>
-            {projects.length!==0&&projects.map((project, index) => (
-              <option key={index} value={project.project_name}>
-                {project.project_name}
-              </option>
-            ))}
+            {projects &&
+              Array.from(new Set(projects.map((obj) => obj.project_name))).map(
+                (project_name) => (
+                  <option key={project_name} value={project_name}>
+                    {project_name}
+                  </option>
+                )
+              )}
           </select>
         </div>
       </div>
-      {project.project_name !== "" && (
+      {projectVersion.length > 0 && (
         <>
           <div className="p-4">
-            <label htmlFor="dropdown">Status Project</label>
+            <label htmlFor="dropdown">Project Version</label>
           </div>
           <div className="p-4">
             <div>
               <select
-                onChange={handleProject}
-                value={project.status || ""}
-                name="status"
-                className="text-base p-2"
-              >
-                <option value={project.status}>{project.status}</option>
-                {project.status === "Development" ? (
-                  <option value={"Production"}>Production</option>
-                ) : (
-                  <option value={"Development"}>Development</option>
-                )}
-              </select>
-            </div>
-          </div>
-          <div className=" p-4">
-            <label htmlFor="dropdown">Developer</label>
-          </div>
-          <div className="p-4">
-            <div>
-              <select
-                onChange={handleProject}
-                value={project.developer || ""}
-                name="developer"
-                className="text-base p-2"
+                onChange={handleVersionChange}
+                value={project.version || ""}
+                name="project_name"
+                className="text-base p-2 bg-gray-100"
               >
                 <option value="" disabled>
-                  Developer
+                  Select an option
                 </option>
-                {users
-                  .filter((user) => user.role === "developer")
-                  // .filter((user) => user.username !== project.developer)
-                  .map((user, index) => (
-                    <option key={index} value={user.namaLengkap}>
-                      {user.namaLengkap}
+                {projectVersion &&
+                  projectVersion.map((project, index) => (
+                    <option key={index} value={project.version}>
+                      {project.version}
                     </option>
                   ))}
               </select>
             </div>
           </div>
-          <div className=" p-4">
-            <label htmlFor="dropdown">Support</label>
-          </div>
-          <div className="p-4">
-            <div>
-              <select
-                onChange={handleProject}
-                value={project.support || ""}
-                name="support"
-                className="text-base p-2"
-              >
-                <option value={project.support} disabled>
-                  {project.support}
-                </option>
-                {users
-                  .filter((user) => user.role === "support")
-                  // .filter((user) => user.username !== project.support)
-                  .map((user, index) => (
-                    <option key={index} value={user.namaLengkap}>
-                      {user.namaLengkap}
+          {project.version!=="" && (
+            <>
+              <div className="p-4">
+                  <label htmlFor="dropdown">Status</label>
+                </div>
+                <div className="p-4">
+                  <select
+                    id="dropdown"
+                    onChange={handleProject}
+                    name="status"
+                    value={project.status || ""}
+                    className="text-base p-2 bg-gray-100 rounded-sm"
+                    required
+                  >
+                    <option value={project.status}>
+                      {project.status}
                     </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-          <div className=" p-4">
-            <label htmlFor="dropdown">Business Analyst</label>
-          </div>
-          <div className="p-4">
-            <div>
-              <select
-                onChange={handleProject}
-                value={project.businessAnalyst || ""}
-                name="businessAnalyst"
-                className="text-base p-2"
-              >
-                <option value={project.support} disabled>
-                  {project.support}
-                </option>
-                {users
-                  // .filter((user) => user.role === "support")
-                  // .filter((user) => user.username !== project.support)
-                  .map((user, index) => (
-                    <option key={index} value={user.namaLengkap}>
-                      {user.namaLengkap}
+                    {options.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              <div className=" p-4">
+                <label htmlFor="dropdown">Developer</label>
+              </div>
+              <div className="p-4">
+                <div>
+                  <select
+                    onChange={handleProject}
+                    value={project.developer || ""}
+                    name="developer"
+                    className="text-base p-2"
+                  >
+                    {users
+                      .filter((user) => user.role === "developer")
+                      // .filter((user) => user.username !== project.developer)
+                      .map((user, index) => (
+                        <option key={index} value={user.namaLengkap}>
+                          {user.namaLengkap}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              <div className=" p-4">
+                <label htmlFor="dropdown">Support</label>
+              </div>
+              <div className="p-4">
+                <div>
+                  <select
+                    onChange={handleProject}
+                    value={project.support || ""}
+                    name="support"
+                    className="text-base p-2"
+                  >
+                    <option value={project.support}>
+                      {project.support}
                     </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-          <div className=" p-4">
-            <label htmlFor="dropdown">Notes</label>
-          </div>
-          <div className=" p-4">
-            <label htmlFor="comment" className="sr-only">
-              Notes
-            </label>
-            <textarea
-              onChange={handleProject}
-              id="comment"
-              className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
-              placeholder="Write a comment about the project...."
-              name="notes"
-              required
-              value={project.notes}
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-yellow-500 rounded-lg mt-4"
-            >
-              Edit Project
-            </button>
-          </div>
+                    {users
+                      .filter((user) => user.role === "support")
+                      // .filter((user) => user.username !== project.support)
+                      .map((user, index) => (
+                        <option key={index} value={user.namaLengkap}>
+                          {user.namaLengkap}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              <div className=" p-4">
+                <label htmlFor="dropdown">Notes</label>
+              </div>
+              <div className=" p-4">
+                <label htmlFor="comment" className="sr-only">
+                  Notes
+                </label>
+                <textarea
+                  onChange={handleProject}
+                  id="comment"
+                  className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                  placeholder="Write a comment about the project...."
+                  name="notes"
+                  required
+                  value={project.notes}
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg mt-4"
+                >
+                  Edit Project
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
     </form>

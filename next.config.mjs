@@ -28,6 +28,14 @@ const nextConfig = {
         },
       ];
     },
+    output:'standalone',
+    webpack: (config) => {
+      if (config.name === 'server') {
+        config.optimization.minimize = false
+      }
+      return config;
+    },
+
   };
   
 export default nextConfig;

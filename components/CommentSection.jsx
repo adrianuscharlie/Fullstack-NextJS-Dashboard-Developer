@@ -4,32 +4,26 @@ import CommentCard from "./Comment";
 import { useSession } from "next-auth/react";
 import Loading from "./Loading";
 
-const CommentSection = ({ project, handleStatus }) => {
+const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loadingComments, setLoadingComments] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
-  const [options, setOptions] = useState(choice);
+  const [options, setOptions] = useState(["Development","Bugs", "Fixing Bugs","SIT","UAT", "Test Support", "Release"]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [emailCC, setEmailCC] = useState(
     new Set([
-      // "handika_sp@indomaret.co.id",
-      // "bima_ans@indomaret.co.id",
-      // "hali.wimboko@indomaret.co.id",
+      "handika_sp@indomaret.co.id",
+      "bima_ans@indomaret.co.id",
+      "hali.wimboko@indomaret.co.id",
     ])
   );
   const [ccText, setCcText] = useState("");
   const [isChecked, setChecked] = useState(false);
   useEffect(() => {
     const fetchComment = async () => {
-      if (session.user.role === "developer") {
-        setOptions(["Fixing Bugs", "Test Support"]);
-      } else if (session.user.role === "support") {
-        setOptions(["Bugs", "Test Release"]);
-      }
       try {
         const result = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL +
@@ -59,6 +53,7 @@ const CommentSection = ({ project, handleStatus }) => {
       status: selectedOption,
       filePath: "",
     };
+    handleSetLoading(true);
     const response = await fetch(
       process.env.NEXT_PUBLIC_BASE_URL +
         `/api/projects/${
@@ -100,43 +95,90 @@ const CommentSection = ({ project, handleStatus }) => {
         alert(message);
       }
       const emailResponse = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL +
-          `/api/email/${project.project_name}_${project.version}`
-      );
-      const { emailDeveloper, emailSupport } = await emailResponse.json();
-      var emailFrom = "";
-      var emailRecipient = "";
-      if (session.user.email === emailDeveloper) {
-        emailFrom = emailDeveloper;
-        emailRecipient = emailSupport;
-      } else {
-        emailFrom = emailSupport;
-        emailRecipient = emailDeveloper;
-      }
-      alert("Sending email notification, please wait for a moment...");
-      const emailObject = {
-        subject: `[${project.status}] Program ${project.project_name} Version ${project.version}`,
-        body: text,
-        from: emailFrom,
-        to: emailRecipient,
-        cc: [...emailCC].join(";"),
-      };
-      const formEmailData = new FormData();
-      formEmailData.append("email", JSON.stringify(emailObject));
-      if (selectedFiles.length > 0) {
-        selectedFiles.forEach((file, index) => {
-          formEmailData.append(`file_${index + 1}`, file);
-        });
-      }
-      const sendEmail = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
-        {
-          method: "POST",
-          body: formEmailData,
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/email/${project.project_name}_${project.version}`
+        );
+        const { emailDeveloper, emailSupport } = await emailResponse.json();
+        var emailFrom = "";
+        var emailRecipient = "";
+        if (session.user.email === emailDeveloper) {
+          emailFrom = emailDeveloper;
+          emailRecipient = emailSupport;
+        } else if(session.user.email === emailSupport) {
+          emailFrom = emailSupport;
+          emailRecipient = emailDeveloper;
+        }else{
+          emailFrom=session.user.email;
+          emailRecipient=emailDeveloper+";"+emailSupport
         }
-      );
-      const emailMessage = await sendEmail.text();
-      alert(emailMessage);
+        alert("Sending email notification, please wait for a moment...");
+      if (isChecked) {
+        const emailObject = {
+          subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
+          body: text,
+          from: emailFrom,
+          to: emailRecipient,
+          cc: [...emailCC].join(";"),
+        };
+        const formEmailData = new FormData();
+        formEmailData.append("email", JSON.stringify(emailObject));
+        if (selectedFiles.length > 0) {
+          selectedFiles.forEach((file, index) => {
+            formEmailData.append(`file_${index + 1}`, file);
+          });
+        }
+        const sendEmail = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
+          {
+            method: "POST",
+            body: formEmailData,
+          }
+        );
+        const emailMessage = await sendEmail.text();
+        alert(emailMessage);
+      }else{
+        const emailObject = {
+          subject: `[${project.status}] Program ${project.project_name} Version ${project.version}`,
+          body: text,
+          from: emailFrom,
+          to: emailRecipient,
+          cc: "",
+        };
+        const formEmailData = new FormData();
+        formEmailData.append("email", JSON.stringify(emailObject));
+        if (selectedFiles.length > 0) {
+          selectedFiles.forEach((file, index) => {
+            formEmailData.append(`file_${index + 1}`, file);
+          });
+        }
+        const sendEmail = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
+          {
+            method: "POST",
+            body: formEmailData,
+          }
+        );
+        const emailMessage = await sendEmail.text();
+        alert(emailMessage);
+        if(!sendEmail.ok){
+          for(let i=0;i<3;i++){
+            alert("Resending Email.....")
+          const sendEmail = await fetch(
+            process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
+            {
+              method: "POST",
+              body: formEmailData,
+            }
+          );
+          const emailMessage = await sendEmail.text();
+          alert(emailMessage);
+          if(sendEmail.ok){
+            break;
+          }
+          }
+        }
+      }
+      handleSetLoading(false);
     }
     setComments((prevItems) => [commentObject, ...prevItems]);
     setText("");
@@ -148,9 +190,18 @@ const CommentSection = ({ project, handleStatus }) => {
   };
   const handleFileChange = (event) => {
     const files = event.target.files;
-
-    if (files.length > 0) {
-      setSelectedFiles(Array.from(files));
+    const filteredFiles = Array.from(files).filter(file => {
+      if (file.name.includes('_')) {
+        alert(`The file "${file.name}" contains an underscore and will be rejected.`);
+        return false;
+      }
+      return true;
+    });
+  
+    if (filteredFiles.length > 0) {
+      setSelectedFiles(filteredFiles);
+    } else {
+      setSelectedFiles([]);
     }
   };
   const handleRemoveFile = (index) => {
@@ -170,7 +221,8 @@ const CommentSection = ({ project, handleStatus }) => {
     <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
       {session.user.namaLengkap === project.developer ||
       session.user.namaLengkap === project.support ||
-      session.user.role.includes("manager") ? (
+      session.user.role.includes("manager")||
+      session.user.role.includes("ba_dev") ? (
         <>
           <form
             className="mb-6 flex flex-col gap-3 bg-slate-100 p-5 rounded-md"
@@ -300,11 +352,16 @@ const CommentSection = ({ project, handleStatus }) => {
                 [...emailCC].map((email) => (
                   <p className="bg-white p-2 rounded-md" key={email}>
                     {email}
-                    <span className="text-red-500 ml-3 hover:cursor-pointer" onClick={()=>{
-                      const updatedEmailCC = new Set(emailCC);
-                      updatedEmailCC.delete(email);
-                      setEmailCC(updatedEmailCC);
-                    }}>x</span>
+                    <span
+                      className="text-red-500 ml-3 hover:cursor-pointer"
+                      onClick={() => {
+                        const updatedEmailCC = new Set(emailCC);
+                        updatedEmailCC.delete(email);
+                        setEmailCC(updatedEmailCC);
+                      }}
+                    >
+                      x
+                    </span>
                   </p>
                 ))}
             </div>

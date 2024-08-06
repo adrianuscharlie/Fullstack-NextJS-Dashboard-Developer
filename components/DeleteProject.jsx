@@ -7,7 +7,7 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const DeleteProject = ({ projects }) => {
+const DeleteProject = ({ projects ,handleSetLoading}) => {
   const router = useRouter();
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
@@ -51,6 +51,7 @@ const DeleteProject = ({ projects }) => {
     );
     if (userConfirmed) {
       alert("Deleting Project");
+      handleSetLoading(true);
       const response = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL +
           `/api/projects/${project.project_name + "  " + project.version}`,
@@ -59,6 +60,7 @@ const DeleteProject = ({ projects }) => {
         }
       );
       const  {message}  = await response.json();
+      handleSetLoading(false);
       alert(message);
       if (response.ok) {
         router.push("/projects");

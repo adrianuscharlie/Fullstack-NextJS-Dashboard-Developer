@@ -64,7 +64,6 @@ function formatDate(inputDate) {
 }
 
 const BADevDoc = ({ formData }) => {
-  console.log(formData.businessAnalyst)
   return (
       <Document
         style={{ width: "100%", height: "100%" }}

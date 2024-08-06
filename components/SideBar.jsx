@@ -18,14 +18,12 @@ const Sidebar = () => {
     };
     setUpProviders();
   }, []);
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut =  () => {
+    signOut({redirect:false});
     router.push("/login");
   };
-  if (!session) {
-    return <></>;
-  }
-  return (
+
+  return session? (
     <>
       <button
         data-drawer-target="sidebar-multi-level-sidebar"
@@ -222,7 +220,7 @@ const Sidebar = () => {
         </div>
       </aside>
     </>
-  );
+  ):<></>;
 };
 
 export default Sidebar;

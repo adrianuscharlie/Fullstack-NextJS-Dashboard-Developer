@@ -18,17 +18,16 @@ const Project = () => {
   const [project, setProject] = useState({});
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (status === "loading") return; // Don't do anything while session is loading
-
+    setLoading(false);
     if (!session) {
       // Redirect to login page if not authenticated.
-      console.log(session, status);
-      router.push("/login"); // Ensure router is used within useEffect
+      router.push("/login");
     }
     const split = pathname.split("/");
     const id = split[2];
-    console.log(id);
     const fetchProject = async () => {
       try {
         const result = await fetch(
@@ -41,18 +40,18 @@ const Project = () => {
         setProject(data);
       } catch (error) {
         console.error("Error fetching projects:", error.message);
+        setProject(null)
       } finally {
         setLoadingProjects(false);
       }
     };
     fetchProject();
-  }, [session, status, router]);
+  }, [session]);
 
   if (loadingProjects) {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator
   }
   const handleStatus = (status) => {
-    console.log(status);
     setProject((previous) => ({
       ...previous,
       ["status"]: status,
@@ -70,7 +69,13 @@ const Project = () => {
   const handleSubmitModal=(formData)=>{
     setProject(formData);
   }
-  return (
+  const handleSetLoading=(value)=>{
+    setLoading(value)
+  }
+  if(loading){
+    return <Loading />
+  }
+  return project? (
     <>
       <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
         <div className="flex items-center justify-start mt-14 gap-3">
@@ -136,9 +141,13 @@ const Project = () => {
           </div>
         </div>
       </section>
-      <CommentSection project={project} handleStatus={handleStatus} />
+      <CommentSection project={project} handleStatus={handleStatus} handleSetLoading={handleSetLoading}/>
     </>
-  );
+  ):<>
+    <section className="p-4 sm:ml-64 h-screen flex justify-center items-center">
+      <h1 className="font-bold text-xl ">404 Project not Found</h1>
+    </section>
+  </>;
 };
 
 export default Project;

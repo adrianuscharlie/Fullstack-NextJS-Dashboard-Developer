@@ -72,14 +72,14 @@ const CreateBA = () => {
       }
     };
     const fetchUsers = async () => {
-        const userResponse = await fetch("/api/users");
+        const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user");
         const data = await userResponse.json();
         setUsers(data);
       };
     
     fetchUserData();
     fetchUsers();
-  }, [session, status, router]);
+  }, []);
   const handleSelectChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);

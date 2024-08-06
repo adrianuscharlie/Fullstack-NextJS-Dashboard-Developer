@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import ProjectsTable from "./Projects";
 import AddVersionModal from "@/components/AddVersionModal";
-
+import { redirect, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 const Accordion = ({ title, projects,users, isOpen, toggleAccordion }) => {
+  const { data: session, status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleModal=()=>{
     setIsModalOpen(!isModalOpen);
@@ -32,9 +34,11 @@ const Accordion = ({ title, projects,users, isOpen, toggleAccordion }) => {
         <div className="flex flex-col p-10 gap-5">
           <div className="flex justify-between">
             <p className="text-lg font-semibold">Details</p>
-            <button onClick={handleModal} className=" bg-green-500 p-2 rounded-md text-base text-white">
+            {!session.user.role.includes("support")&&(
+              <button onClick={handleModal} className=" bg-green-500 p-2 rounded-md text-base text-white">
               + Version
             </button>
+            )}
             {isModalOpen ? (
               <AddVersionModal
                 users={users}

@@ -20,12 +20,11 @@ export default function Home() {
       router.push("/login");
       return;
     }
-
     setUser(session.user);
 
     const fetchUserData = async () => {
       try {
-        const url = session.user.role.includes ("manager")
+        const url = session.user.role.includes ("manager") || session.user.role.includes("ba_dev")
           ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
           : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
         const response = await fetch(url);
@@ -44,15 +43,14 @@ export default function Home() {
     };
 
     fetchUserData();
-  }, [session, status, router]);
+  }, [session]);
 
   if (loading) {
     return <Loading />;
   }
 
   
-  const isAdmin = user.role.includes("manager") ;
-  console.log(session.user)
+  const isAdmin = user.role.includes("manager")|| user.role.includes("ba_dev") ;
   return (
     <>
       {isAdmin ? (

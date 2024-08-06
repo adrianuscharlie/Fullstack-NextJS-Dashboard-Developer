@@ -25,7 +25,6 @@ const ReleaseBaRelease = ({ projects }) => {
     const selectedProject = projects.filter(
       (project) => project.project_name === projectName
     );
-    console.log(selectedProject);
     if (selectedProject.length === 1) {
       setFormData((prevData) => ({
         ...prevData,
@@ -79,7 +78,6 @@ const ReleaseBaRelease = ({ projects }) => {
     const foundProject = projectVersion.find(
       (project) => project.version === version
     );
-    console.log(foundProject);
     setFormData((prevData) => ({
       ...prevData,
       ["project_name"]: foundProject.project_name,

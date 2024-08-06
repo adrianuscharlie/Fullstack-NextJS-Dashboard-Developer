@@ -22,7 +22,6 @@ const EmailPage = () => {
 
   useEffect(() => {
     if (status === "loading") return;
-
     if (!session) {
       router.push("/login");
       return;
@@ -31,30 +30,38 @@ const EmailPage = () => {
       ...prevData,
       ["from"]: session.user.email,
     }));
-    console.log(session.user);
     setLoading(false);
-  }, [session, status, router]);
+  }, [session]);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData();
-    setFormEmail((prevData)=>({
+    const toEmails = [...emailRecipient].join(";");
+    const ccEmails = [...emailCC].join(";");
+    const emailObject={
+      ...formEmail,
+      to:toEmails,
+      cc:ccEmails
+    }
+    setFormEmail((prevData) => ({
       ...prevData,
-      ["to"]:[...emailRecipient].join(";"),
-      ["cc"]:[...emailCC].join(";"),
-    }))
-    formData.append("email", JSON.stringify(formEmail));
+      to: toEmails,
+      cc: ccEmails,
+    }));
+    formData.append("email", JSON.stringify(emailObject));
     if (selectedFiles.length > 0) {
       selectedFiles.forEach((file, index) => {
         formData.append(`file_${index + 1}`, file);
       });
     }
+    setLoading(true);
     const test = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/api/email", {
       method: "POST",
       body: formData,
     });
     const message = await test.text();
+    setLoading(false);
     alert(message);
   };
 
@@ -125,6 +132,7 @@ const EmailPage = () => {
               value={recippientText}
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
+                  event.preventDefault();
                   setEmailRecipient(
                     new Set([...emailRecipient, recippientText])
                   );
@@ -137,8 +145,18 @@ const EmailPage = () => {
           <div className="flex items-center flex-wrap justify-start gap-3 mt-2">
             {emailRecipient.size > 0 &&
               [...emailRecipient].map((email) => (
-                <p className="bg-gray-100 p-2 rounded-md" key={email}>
+                <p className="bg-white p-2 rounded-md" key={email}>
                   {email}
+                  <span
+                    className="text-red-500 ml-3 hover:cursor-pointer"
+                    onClick={() => {
+                      const updatedEmailRecipient = new Set(emailRecipient);
+                      updatedEmailRecipient.delete(email);
+                      setEmailRecipient(updatedEmailRecipient);
+                    }}
+                  >
+                    x
+                  </span>
                 </p>
               ))}
           </div>
@@ -156,18 +174,28 @@ const EmailPage = () => {
               value={ccText}
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
+                  event.preventDefault();
                   setEmailCC(new Set([...emailCC, ccText]));
                   setCcText(" ");
                 }
               }}
-              
             />
           </div>
           <div className="flex items-center flex-wrap justify-start gap-3 mt-2">
             {emailCC.size > 0 &&
               [...emailCC].map((email) => (
-                <p className="bg-gray-100 p-2 rounded-md" key={email}>
+                <p className="bg-white p-2 rounded-md" key={email}>
                   {email}
+                  <span
+                    className="text-red-500 ml-3 hover:cursor-pointer"
+                    onClick={() => {
+                      const updatedEmailCC = new Set(emailCC);
+                      updatedEmailCC.delete(email);
+                      setEmailCC(updatedEmailCC);
+                    }}
+                  >
+                    x
+                  </span>
                 </p>
               ))}
           </div>

@@ -23,7 +23,7 @@ const Configuration = () => {
       return;
     }
     setLoading(false);
-  },[session, status, router])
+  },[session])
 
   if (loading) {
     return <Loading />;
@@ -32,6 +32,10 @@ const Configuration = () => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);
   };
+
+  const handleSetLoading=(value)=>{
+    setLoading(value)
+  }
   return (
     <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
       <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
@@ -62,10 +66,10 @@ const Configuration = () => {
         </div>
       </div>
       {selectedOption==="Edit Profile"&&(
-        <EditProfile user={session.user}/>
+        <EditProfile user={session.user} handleSetLoading={handleSetLoading}/>
       )}
       {selectedOption==="Change Password"&&(
-        <ChangePassword user={session.user}/>
+        <ChangePassword user={session.user} handleSetLoading={handleSetLoading}/>
       )}
     </section>
   );

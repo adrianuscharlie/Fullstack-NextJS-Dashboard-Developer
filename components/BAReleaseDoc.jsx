@@ -65,7 +65,6 @@ function formatDate(inputDate) {
 }
 
 const BAReleaseDoc = ({ formData }) => {
-  console.log(formData.businessAnalyst);
   return (
     <Document
       style={{ width: "100%", height: "100%" }}

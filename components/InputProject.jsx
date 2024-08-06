@@ -7,7 +7,7 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const InputProject = ({ users }) => {
+const InputProject = ({ users,handleSetLoading }) => {
   const [project, setProject] = useState({
     project_name: "",
     developer: "",
@@ -15,11 +15,11 @@ const InputProject = ({ users }) => {
     status: "Development",
     details: "",
     version: "0.0.0.0",
+    notes:""
   });
   const router = useRouter();
   const handleProject = (e) => {
     const { name, value } = e.target;
-    console.log(name, value);
     setProject((prevData) => ({
       ...prevData,
       [name]: value,
@@ -28,6 +28,7 @@ const InputProject = ({ users }) => {
   const handleInput = async (event) => {
     event.preventDefault();
     alert("Uploading new Project");
+    handleSetLoading(true);
     const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +`/api/projects`, {
       method: "POST",
       body: JSON.stringify(project),
@@ -36,6 +37,7 @@ const InputProject = ({ users }) => {
       },
     });
     const message= await response.text();
+    handleSetLoading(false);
     alert(message)
     if (response.ok) {
       router.push(`/projects/${project.project_name+"  "+project.version}`);

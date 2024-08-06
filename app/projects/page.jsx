@@ -20,8 +20,7 @@ const Projects = () => {
 
     if (!session) {
       // Redirect to login page if not authenticated.
-      console.log(session, status);
-      router.push("/login"); // Ensure router is used within useEffect
+      router.push("/login");
     }
 
     const fetchProjects = async () => {
@@ -31,7 +30,6 @@ const Projects = () => {
           throw new Error("Failed to fetch projects");
         }
         const data = await result.json();
-        console.log(data)
         const orderedData = groupProjectsByProjectName(data);
         var dataFinal = {};
         Object.entries(orderedData).forEach(([key, value]) => {
@@ -50,13 +48,13 @@ const Projects = () => {
       }
     };
     const fetchUsers = async () => {
-      const userResponse = await fetch("/api/users");
+      const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user");
       const data = await userResponse.json();
       setUsers(data);
     };
     fetchProjects();
     fetchUsers();
-  }, [session, status, router]);
+  }, [session]);
 
   
   if (loadingProjects) {
@@ -104,7 +102,7 @@ const Projects = () => {
   return (
     <div>
       {session ? (
-        <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
+        <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10 mb-20">
           <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
             List all project that managed by
             <span className="text-center capitalize"> KIS</span>

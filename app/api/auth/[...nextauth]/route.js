@@ -15,7 +15,6 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        
         const user = await User.login(credentials.username, credentials.password);
         if (user) {
           return Promise.resolve(user); // Return user object on success

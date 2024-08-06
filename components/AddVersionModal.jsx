@@ -20,7 +20,7 @@ const AddVersionModal = ({
     details: details,
     version: "",
     developer: session.user.namaLengkap,
-    support: "",
+    support: "Hali Wimboko",
     status: "Development",
   });
   const handleChange = (e) => {
