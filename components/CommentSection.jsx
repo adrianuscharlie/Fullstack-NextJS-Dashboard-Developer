@@ -3,25 +3,51 @@ import React, { useEffect, useState } from "react";
 import CommentCard from "./Comment";
 import { useSession } from "next-auth/react";
 import Loading from "./Loading";
+import Notification from "./Notification";
+import {
+  CloudUpload,
+  File,
+  Trash2,
+  Loader,
+  MessageSquareCode,
+} from "lucide-react";
 
-const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
+const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loadingComments, setLoadingComments] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [options, setOptions] = useState(["Development","Bugs", "Fixing Bugs","SIT","UAT", "Test Support", "Release"]);
+  const [options, setOptions] = useState([
+    "Development",
+    "Bugs",
+    "Fixing Bugs",
+    "SIT",
+    "UAT",
+    "Test Support",
+    "Release",
+  ]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [editTogle, setEditTogle] = useState(null);
   const [emailCC, setEmailCC] = useState(
     new Set([
       "handika_sp@indomaret.co.id",
       "bima_ans@indomaret.co.id",
       "hali.wimboko@indomaret.co.id",
+      session.user.email
     ])
   );
   const [ccText, setCcText] = useState("");
   const [isChecked, setChecked] = useState(false);
+  const [notification, setNotification] = useState({
+    show: false,
+    title: "",
+    type: "", // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   useEffect(() => {
     const fetchComment = async () => {
       try {
@@ -42,7 +68,16 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
       }
     };
     fetchComment();
+    // If notification is closing, wait for it to close before navigating
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+      }, 3000); // Adjust the timeout to match your notification close animation duration
+
+      return () => clearTimeout(timeout);
+    }
   }, []);
+
   const handleSubmitComment = async (event) => {
     event.preventDefault();
     const commentObject = {
@@ -52,162 +87,242 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
       version: project.version,
       status: selectedOption,
       filePath: "",
+      id: editTogle || "", // Include id only if editing
     };
-    handleSetLoading(true);
+
+    const isEditing = editTogle !== null;
+    const method = isEditing ? "PUT" : "POST";
+    const actionTitle = isEditing
+      ? `Editing Comment with ID: ${editTogle}`
+      : "Uploading New Comment";
+
+    setNotification({
+      show: true,
+      type: "general",
+      title: actionTitle,
+    });
+
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL +
-        `/api/projects/${
-          project.project_name + "  " + project.version
-        }/comments`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${
+        project.project_name + "  " + project.version
+      }/comments`,
       {
-        method: "POST",
+        method,
         headers: {
-          "Content-Type": "application/json", // Set the Content-Type header to JSON
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(commentObject),
       }
     );
-    handleStatus(commentObject.status);
-    const { message, id, date } = await response.json();
-    if (response.ok) {
-      commentObject.id = id;
-      commentObject.date = date;
-      if (selectedFiles.length > 0) {
-        alert("Uploading file into server....");
-        const formData = new FormData();
-        commentObject.folder = project.project_name;
-        // Append files to FormData
-        selectedFiles.forEach((file, index) => {
-          formData.append(`file_${id}_${index + 1}`, file);
-        });
-        // Append JSON object as a string
-        formData.append("header", JSON.stringify(commentObject));
-        const test = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + "/api/files",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const uploadMessage = await test.text();
-        alert(uploadMessage);
-      } else {
-        alert(message);
-      }
-      const emailResponse = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL +
-            `/api/email/${project.project_name}_${project.version}`
-        );
-        const { emailDeveloper, emailSupport } = await emailResponse.json();
-        var emailFrom = "";
-        var emailRecipient = "";
-        if (session.user.email === emailDeveloper) {
-          emailFrom = emailDeveloper;
-          emailRecipient = emailSupport;
-        } else if(session.user.email === emailSupport) {
-          emailFrom = emailSupport;
-          emailRecipient = emailDeveloper;
-        }else{
-          emailFrom=session.user.email;
-          emailRecipient=emailDeveloper+";"+emailSupport
-        }
-        alert("Sending email notification, please wait for a moment...");
-      if (isChecked) {
-        const emailObject = {
-          subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
-          body: text,
-          from: emailFrom,
-          to: emailRecipient,
-          cc: [...emailCC].join(";"),
-        };
-        const formEmailData = new FormData();
-        formEmailData.append("email", JSON.stringify(emailObject));
-        if (selectedFiles.length > 0) {
-          selectedFiles.forEach((file, index) => {
-            formEmailData.append(`file_${index + 1}`, file);
-          });
-        }
-        const sendEmail = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
-          {
-            method: "POST",
-            body: formEmailData,
-          }
-        );
-        const emailMessage = await sendEmail.text();
-        alert(emailMessage);
-      }else{
-        const emailObject = {
-          subject: `[${project.status}] Program ${project.project_name} Version ${project.version}`,
-          body: text,
-          from: emailFrom,
-          to: emailRecipient,
-          cc: "",
-        };
-        const formEmailData = new FormData();
-        formEmailData.append("email", JSON.stringify(emailObject));
-        if (selectedFiles.length > 0) {
-          selectedFiles.forEach((file, index) => {
-            formEmailData.append(`file_${index + 1}`, file);
-          });
-        }
-        const sendEmail = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
-          {
-            method: "POST",
-            body: formEmailData,
-          }
-        );
-        const emailMessage = await sendEmail.text();
-        alert(emailMessage);
-        if(!sendEmail.ok){
-          for(let i=0;i<3;i++){
-            alert("Resending Email.....")
-          const sendEmail = await fetch(
-            process.env.NEXT_PUBLIC_BASE_URL + "/api/email",
-            {
-              method: "POST",
-              body: formEmailData,
-            }
-          );
-          const emailMessage = await sendEmail.text();
-          alert(emailMessage);
-          if(sendEmail.ok){
-            break;
-          }
-          }
-        }
-      }
+
+    const result = await response.json();
+    if (!response.ok) {
+      setNotification({
+        show: true,
+        type: "error",
+        title: result.message || "Failed to submit comment",
+      });
       handleSetLoading(false);
+      return;
     }
-    setComments((prevItems) => [commentObject, ...prevItems]);
+
+    // Update the comment with ID and Date received from the response
+    commentObject.id = result.id;
+    commentObject.date = result.date;
+    commentObject.folder = project.project_name;
+    // Handle file uploads if any files are selected
+    if (selectedFiles.length > 0) {
+      setNotification({
+        show: true,
+        type: "general",
+        title: "Uploading file into server...",
+      });
+
+      const formData = new FormData();
+      formData.append("header", JSON.stringify(commentObject));
+      selectedFiles.forEach((file, index) => {
+        formData.append(`file_${commentObject.id}_${index + 1}`, file);
+      });
+
+      const fileUploadResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/files`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const uploadMessage = await fileUploadResponse.text();
+      setNotification({
+        show: true,
+        type: fileUploadResponse.ok ? "success" : "error",
+        title: uploadMessage,
+      });
+    }
+
+    // Send email notifications if needed
+    const emailResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`
+    );
+
+    const { emailDeveloper, emailSupport } = await emailResponse.json();
+    let emailFrom = session.user.email;
+    let emailRecipient = emailDeveloper;
+
+    if (emailFrom === emailDeveloper) {
+      emailRecipient = emailSupport;
+    } else if (emailFrom === emailSupport) {
+      emailRecipient = emailDeveloper;
+    } else {
+      emailRecipient += `;${emailSupport}`;
+    }
+
+    setNotification({
+      show: true,
+      type: "general",
+      title: "Sending email notification, please wait...",
+    });
+
+    const emailObject = {
+      subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
+      body: text,
+      from: emailFrom,
+      to: emailRecipient,
+      cc: [...emailCC].join(";"),
+    };
+
+    const emailFormData = new FormData();
+    emailFormData.append("email", JSON.stringify(emailObject));
+    selectedFiles.forEach((file, index) => {
+      emailFormData.append(`file_${index + 1}`, file);
+    });
+
+    const sendEmail = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+      {
+        method: "POST",
+        body: emailFormData,
+      }
+    );
+
+    const emailMessage = await sendEmail.text();
+    if (!sendEmail.ok) {
+      for (let i = 0; i < 3; i++) {
+        setNotification({
+          show: true,
+          type: "general",
+          title: "Resending Email...",
+        });
+
+        const resendEmail = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+          {
+            method: "POST",
+            body: emailFormData,
+          }
+        );
+
+        const resendMessage = await resendEmail.text();
+        if (resendEmail.ok) {
+          setNotification({
+            show: true,
+            type: "success",
+            title: resendMessage,
+          });
+          break;
+        } else {
+          setNotification({
+            show: true,
+            type: "error",
+            title: resendMessage,
+          });
+        }
+      }
+    } else {
+      setNotification({
+        show: true,
+        type: "success",
+        title: emailMessage,
+      });
+    }
+
+    // Update UI and clear form
+    setComments((prevItems) => {
+      if (editTogle === null) {
+        // Adding a new comment
+        return [commentObject, ...prevItems];
+      } else {
+        // Updating an existing comment
+        return prevItems.map((item) =>
+          item.id === commentObject.id ? commentObject : item
+        );
+      }
+    });
     setText("");
     setSelectedFiles([]);
     setIsOpen(false);
     setCcText("");
     setEmailCC(new Set([]));
     setSelectedOption(null);
+    handleSetLoading(false);
   };
+
   const handleFileChange = (event) => {
-    const files = event.target.files;
-    const filteredFiles = Array.from(files).filter(file => {
-      if (file.name.includes('_')) {
-        alert(`The file "${file.name}" contains an underscore and will be rejected.`);
+    const newFiles = Array.from(event.target.files);
+
+    // Filter the new files to reject those with underscores
+    const filteredFiles = newFiles.filter((file) => {
+      if (file.name.includes("_")) {
+        alert(
+          `The file "${file.name}" contains an underscore and will be rejected.`
+        );
         return false;
       }
       return true;
     });
-  
+
     if (filteredFiles.length > 0) {
-      setSelectedFiles(filteredFiles);
-    } else {
-      setSelectedFiles([]);
+      setSelectedFiles((prevSelectedFiles) => [
+        ...prevSelectedFiles,
+        ...filteredFiles,
+      ]);
     }
   };
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = async (index) => {
     const updatedFiles = [...selectedFiles];
+    const fileObject = selectedFiles[index];
     updatedFiles.splice(index, 1);
     setSelectedFiles(updatedFiles);
+    if (editTogle) {
+      const check = confirm("Are you sure want to delete this file?");
+      if (check) {
+        const filePath = encodeURIComponent(fileObject.filePath);
+        setNotification({
+          show: true,
+          type: "general",
+          title: "Deleting file in server",
+        });
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
+        const response = await fetch(url, {
+          method: "DELETE",
+        });
+        const message = await response.text();
+        if (response.ok) {
+          setNotification({
+            show: true,
+            type: "success",
+            title: message,
+          });
+          setEditTogle(null)
+        } else {
+          setNotification({
+            show: true,
+            type: "error",
+            title: message,
+          });
+        }
+      }
+    }
   };
   if (loadingComments) {
     return <Loading />;
@@ -217,11 +332,56 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
     setSelectedOption(selectedOption);
   };
 
+  const handleOnAction = async (action) => {
+    const { command, id } = action;
+    if (command === "edit") {
+      window.scrollTo({
+        top: 120,
+        behavior: "smooth",
+      });
+      const commentData = comments.filter((item) => item.id === id)[0];
+      setText(commentData.text);
+      setSelectedOption(commentData.status);
+      setEditTogle(id);
+    } else {
+      const confirm = window.confirm("Are you sure?");
+      if (confirm) {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/projects/${
+              project.project_name + "  " + project.version + "/comments/" + id
+            }`,
+          {
+            method: "DELETE",
+          }
+        );
+        const { message } = await response.json();
+        if (response.ok) {
+          setComments((prevItems) =>
+            prevItems.filter((item) => item.id !== id)
+          );
+          setNotification({
+            show: true,
+            type: "success",
+            title: message,
+          });
+        }
+      }
+    }
+  };
+
   return (
     <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
+      {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
       {session.user.namaLengkap === project.developer ||
       session.user.namaLengkap === project.support ||
-      session.user.role.includes("manager")||
+      session.user.role.includes("manager") ||
       session.user.role.includes("ba_dev") ? (
         <>
           <form
@@ -235,78 +395,63 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
                 id="comment"
                 className="px-0 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
                 placeholder="Write a comment about the project...."
+                value={text}
                 required
               />
             </div>
-            <div className="flex gap-3 justify-start items-center w-full">
-              <select
-                id="dropdown"
-                onChange={handleSelectChange}
-                value={selectedOption || ""}
-                className="text-base p-2 bg-slate-200 rounded-sm"
-                required
-              >
-                <option value="" disabled>
-                  Select Status
-                </option>
-                {options.map((option, index) => (
-                  <option key={index} value={option}>
-                    {option}
+            <div className="flex flex-col container gap-3 justify-start items-start w-full">
+              <div className="flex w-full gap-3 justify-start items-center">
+                {/* Dropdown */}
+                <Loader className="text-yellow-500" />
+                <select
+                  id="dropdown"
+                  onChange={handleSelectChange}
+                  value={selectedOption || ""}
+                  className="text-base p-2 bg-slate-200 rounded-sm w-1/3"
+                  required
+                >
+                  <option value="" disabled>
+                    Select Status
                   </option>
-                ))}
-              </select>
-              <input
-                type="file"
-                className=""
-                multiple
-                onChange={handleFileChange}
-              />
+                  {options.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+
+                {/* File Input */}
+                <input
+                  type="file"
+                  className="p-2 rounded-sm w-2/3"
+                  multiple
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Display selected files */}
               {selectedFiles.length > 0 && (
-                <div className="flex p-5 items-center justify-start w-full">
-                  <ul className="flex justify-start items-center gap gap-2 w-ful">
+                <div className="flex flex-wrap p-5 items-start justify-start gap-2 w-ful rounded-md">
+                  <ul className="flex flex-wrap justify-start items-start gap-2 w-full">
                     {selectedFiles.map((file, index) => (
-                      <li key={index}>
-                        <span
-                          className="inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900 gap-2 bg-white p-1 rounded-md"
-                          onClick={handleRemoveFile}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            x="0px"
-                            y="0px"
-                            width="15"
-                            height="15"
-                            viewBox="0 0 48 48"
-                          >
-                            <path d="M 12.5 4 C 10.019 4 8 6.019 8 8.5 L 8 39.5 C 8 41.981 10.019 44 12.5 44 L 35.5 44 C 37.981 44 40 41.981 40 39.5 L 40 20 L 28.5 20 C 26.019 20 24 17.981 24 15.5 L 24 4 L 12.5 4 z M 27 4.8789062 L 27 15.5 C 27 16.327 27.673 17 28.5 17 L 39.121094 17 L 27 4.8789062 z"></path>
-                          </svg>
+                      <li
+                        key={index}
+                        className="w-full sm:w-auto flex items-center bg-slate-200"
+                      >
+                        <span className="inline-flex items-center font-semibold text-sm text-gray-900 gap-2  p-2 rounded-md shadow-sm w-full sm:w-auto">
+                          <File className="text-xs" />
                           {file.name}
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            x="0px"
-                            y="0px"
-                            width="15"
-                            height="15"
-                            viewBox="0 0 48 48"
+                          <button
+                            type="button"
+                            className="ml-2"
+                            onClick={() => handleRemoveFile(index)}
                           >
-                            <path
-                              fill="#f44336"
-                              d="M44,24c0,11.045-8.955,20-20,20S4,35.045,4,24S12.955,4,24,4S44,12.955,44,24z"
-                            ></path>
-                            <path
-                              fill="#fff"
-                              d="M29.656,15.516l2.828,2.828l-14.14,14.14l-2.828-2.828L29.656,15.516z"
-                            ></path>
-                            <path
-                              fill="#fff"
-                              d="M32.484,29.656l-2.828,2.828l-14.14-14.14l2.828-2.828L32.484,29.656z"
-                            ></path>
-                          </svg>
+                            <Trash2 className="text-red-500" />
+                          </button>
                         </span>
                       </li>
                     ))}
                   </ul>
-                  {/* Additional file-related information can be displayed here */}
                 </div>
               )}
             </div>
@@ -367,8 +512,9 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
             </div>
             <button
               type="submit"
-              className="w-32 items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg"
+              className="w-40 flex items-center gap-3 py-2.5 px-2 text-sm font-medium text-center text-white bg-sky-500 rounded-lg"
             >
+              <CloudUpload />
               Post Comment
             </button>
           </form>
@@ -376,10 +522,11 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
       ) : null}
       <div className="border rounded-md mb-1 ">
         <button
-          className="w-full p-5 text-left bg-gray-200  text-lg font-semibold
+          className="w-full flex justify-between p-5 text-left bg-gray-200  text-lg font-semibold
                            hover:bg-gray-300 transition duration-300"
           onClick={() => setIsOpen(!isOpen)}
         >
+          <MessageSquareCode className="text-yellow-500" />
           Comments ({comments.length})
           <span
             className={`float-right transform ${
@@ -393,7 +540,11 @@ const CommentSection = ({ project, handleStatus,handleSetLoading }) => {
           comments.length > 0 &&
           isOpen &&
           comments.map((comment) => (
-            <CommentCard key={comment.id} data={comment} />
+            <CommentCard
+              key={comment.id}
+              data={comment}
+              onAction={handleOnAction}
+            />
           ))}
       </div>
     </section>

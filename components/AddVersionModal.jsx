@@ -1,9 +1,10 @@
 "use client";
 import React from "react";
 import Modal from "react-modal";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
+import Notification from "./Notification";
 const AddVersionModal = ({
   users,
   isOpen,
@@ -23,6 +24,14 @@ const AddVersionModal = ({
     support: "Hali Wimboko",
     status: "Development",
   });
+  const [notification, setNotification] = useState({
+    show: false,
+    title:'',
+    type: '', // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -39,7 +48,11 @@ const AddVersionModal = ({
     };
     const isValid = isVersionExist(projects, formData.version);
     if (!isValid) {
-      alert("Uploading New Project Version");
+      setNotification({
+        show: true,
+        type: 'general',
+        title:'Uploading New Version'
+      });
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects`, {
         method: "POST",
         headers: {
@@ -48,17 +61,43 @@ const AddVersionModal = ({
         body: JSON.stringify(formData),
       });
       const message=await response.text();
-      alert(message);
       if (response.ok) {
+        setNotification({
+          show: true,
+          type: 'success',
+          title:message,
+        });
         router.push("/projects/"+formData.project_name+"  "+formData.version)
       }
     } else {
-      alert("Duplicate Version");
+      setNotification({
+        show: true,
+        type: 'error',
+        title:message
+      });
     }
   };
+  useEffect(() => {
+    // If notification is closing, wait for it to close before navigating
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+        router.push('/projects');
+      }, 3000); // Adjust the timeout to match your notification close animation duration
+
+      return () => clearTimeout(timeout);
+    }
+  }, [notification.isClosing, router]);
   return (
     <>
-      <div className="fixed top-0 right-0 left-0 z-50 overflow-y-auto overflow-x-hidden flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-100 bg-opacity-50">
+      {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
+      <div className="fixed top-0 right-0 left-0 z-40 overflow-y-auto overflow-x-hidden flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-100 bg-opacity-50">
         <form
           className="relative p-4 w-full max-w-4xl max-h-full"
           onSubmit={onSubmit}

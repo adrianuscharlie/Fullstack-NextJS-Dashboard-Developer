@@ -14,6 +14,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log(session)
     if (status === "loading") return;
 
     if (!session) {

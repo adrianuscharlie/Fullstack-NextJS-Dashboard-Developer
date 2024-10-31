@@ -4,6 +4,7 @@ import ProjectsTable from "./Projects";
 import AddVersionModal from "@/components/AddVersionModal";
 import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { CircleFadingPlus } from "lucide-react";
 const Accordion = ({ title, projects,users, isOpen, toggleAccordion }) => {
   const { data: session, status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,8 +36,8 @@ const Accordion = ({ title, projects,users, isOpen, toggleAccordion }) => {
           <div className="flex justify-between">
             <p className="text-lg font-semibold">Details</p>
             {!session.user.role.includes("support")&&(
-              <button onClick={handleModal} className=" bg-green-500 p-2 rounded-md text-base text-white">
-              + Version
+              <button onClick={handleModal} className=" bg-green-500 flex gap-2 p-2 rounded-md text-base text-white">
+              <CircleFadingPlus/> Version
             </button>
             )}
             {isModalOpen ? (

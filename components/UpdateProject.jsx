@@ -6,20 +6,29 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-const UpdateProject = ({ users, projects ,handleSetLoading}) => {
+import Notification from "./Notification";
+const UpdateProject = ({ users, projects, handleSetLoading }) => {
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
     project_name: "",
     developer: "",
     support: "",
-    version:"",
+    version: "",
     status: "Development",
     notes: "",
-    details:"",
+    details: "",
   });
   const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
   const [options, setOptions] = useState(choice);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [notification, setNotification] = useState({
+    show: false,
+    title: "",
+    type: "", // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
     const selectedProject = projects.filter(
@@ -30,9 +39,9 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
         ...prevData,
         ["project_name"]: selectedProject[0].project_name,
         ["version"]: selectedProject[0].version,
-        ["developer"]:selectedProject[0].developer,
-      ["support"]:selectedProject[0].support,
-      ["details"]:selectedProject[0].details
+        ["developer"]: selectedProject[0].developer,
+        ["support"]: selectedProject[0].support,
+        ["details"]: selectedProject[0].details,
       }));
     } else {
       setProject((prevData) => ({
@@ -47,14 +56,14 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
     const foundProject = projectVersion.find(
       (project) => project.version === version
     );
-    console.log(foundProject)
+    console.log(foundProject);
     setProject((prevData) => ({
       ...prevData,
       ["project_name"]: foundProject.project_name,
       ["version"]: foundProject.version,
-      ["developer"]:foundProject.developer,
-      ["support"]:foundProject.support,
-      ["details"]:foundProject.details
+      ["developer"]: foundProject.developer,
+      ["support"]: foundProject.support,
+      ["details"]: foundProject.details,
     }));
   };
 
@@ -68,23 +77,57 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
   };
   const handleInput = async (event) => {
     event.preventDefault();
-    alert("Updating Project");
-    handleSetLoading(true);
-    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${project.project_name}  ${project.version}`, {
-      method: "PUT",
-      headers: {
-        'Content-Type': 'application/json' // Set the Content-Type header to JSON
-      },
-      body: JSON.stringify(project),
+    setNotification({
+      show: true,
+      type: "general",
+      title: "Updating Project",
     });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BASE_URL +
+        `/api/projects/${project.project_name}  ${project.version}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json", // Set the Content-Type header to JSON
+        },
+        body: JSON.stringify(project),
+      }
+    );
     const message = await response.text();
     handleSetLoading(false);
-    alert(message);
     if (response.ok) {
+      setNotification({
+        show: true,
+        type: "success",
+        title: message,
+      });
       router.push(`/projects/${project.project_name}  ${project.version}`);
+    } else {
+      setNotification({
+        show: true,
+        type: "error",
+        title: message,
+      });
     }
   };
+  useEffect(() => {
+    // If notification is closing, wait for it to close before navigating
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+      }, 3000); // Adjust the timeout to match your notification close animation duration
+      return () => clearTimeout(timeout);
+    }
+  }, [notification, router]);
   return (
+    <>
+    {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
     <form
       className="grid grid-cols-[1fr,3fr] gap-4  text-lg"
       onSubmit={handleInput}
@@ -139,30 +182,28 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
               </select>
             </div>
           </div>
-          {project.version!=="" && (
+          {project.version !== "" && (
             <>
               <div className="p-4">
-                  <label htmlFor="dropdown">Status</label>
-                </div>
-                <div className="p-4">
-                  <select
-                    id="dropdown"
-                    onChange={handleProject}
-                    name="status"
-                    value={project.status || ""}
-                    className="text-base p-2 bg-gray-100 rounded-sm"
-                    required
-                  >
-                    <option value={project.status}>
-                      {project.status}
+                <label htmlFor="dropdown">Status</label>
+              </div>
+              <div className="p-4">
+                <select
+                  id="dropdown"
+                  onChange={handleProject}
+                  name="status"
+                  value={project.status || ""}
+                  className="text-base p-2 bg-gray-100 rounded-sm"
+                  required
+                >
+                  <option value={project.status}>{project.status}</option>
+                  {options.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
                     </option>
-                    {options.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  ))}
+                </select>
+              </div>
               <div className=" p-4">
                 <label htmlFor="dropdown">Developer</label>
               </div>
@@ -196,9 +237,7 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
                     name="support"
                     className="text-base p-2"
                   >
-                    <option value={project.support}>
-                      {project.support}
-                    </option>
+                    <option value={project.support}>{project.support}</option>
                     {users
                       .filter((user) => user.role === "support")
                       // .filter((user) => user.username !== project.support)
@@ -237,7 +276,7 @@ const UpdateProject = ({ users, projects ,handleSetLoading}) => {
           )}
         </>
       )}
-    </form>
+    </form></>
   );
 };
 

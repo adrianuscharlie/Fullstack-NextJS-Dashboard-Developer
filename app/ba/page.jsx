@@ -79,7 +79,7 @@ const CreateBA = () => {
     
     fetchUserData();
     fetchUsers();
-  }, []);
+  }, [session]);
   const handleSelectChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);

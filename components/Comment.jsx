@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
-import Loading from "./Loading";
-import stream from "stream";
-import { promisify } from "util";
-const CommentCard = ({ data }) => {
+import { File, Pencil, User2, Day, Trash2 } from "lucide-react";
+import Notification from "./Notification";
+const CommentCard = ({ data, onAction }) => {
   const [comment, setComment] = useState(data);
   const [files, setFiles] = useState([]);
   const [date, setDate] = useState("");
   const [loadingFiles, setLoadingFiles] = useState(true);
+  const [notification, setNotification] = useState({
+    show: false,
+    title: "",
+    type: "", // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   useEffect(() => {
     const fetchFile = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/files/comments/${comment.id}`);
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + `/api/files/comments/${comment.id}`
+        );
         if (response.ok) {
           const data = await response.json();
           setFiles(data);
@@ -23,13 +32,33 @@ const CommentCard = ({ data }) => {
     };
     fetchFile();
     const datetime = new Date(comment.date);
-    setDate(`${('0' + datetime.getHours()).slice(-2)}:${('0' + datetime.getMinutes()).slice(-2)} ${('0' + datetime.getDate()).slice(-2)}/${('0' + (datetime.getMonth() + 1)).slice(-2)}/${datetime.getFullYear()}`)
+    setDate(
+      `${("0" + datetime.getHours()).slice(-2)}:${(
+        "0" + datetime.getMinutes()
+      ).slice(-2)} ${("0" + datetime.getDate()).slice(-2)}/${(
+        "0" +
+        (datetime.getMonth() + 1)
+      ).slice(-2)}/${datetime.getFullYear()}`
+    );
   }, []);
 
   const handleDownload = async (file) => {
     const getRequest =
-      file.fileName + "_" + file.commentID + "_" + file.project_name+"_"+file.version;
-    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/files/${getRequest}`);
+      file.fileName +
+      "_" +
+      file.commentID +
+      "_" +
+      file.project_name +
+      "_" +
+      file.version;
+    setNotification({
+      show: true,
+      type: "general",
+      title: "Downloading File :" + file.fileName +" .....", 
+    });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`
+    );
     if (response.ok) {
       const blob = await response.blob();
       // Create a blob URL for the file content
@@ -47,27 +76,68 @@ const CommentCard = ({ data }) => {
 
       // Clean up by revoking the blob URL
       window.URL.revokeObjectURL(url);
+      setNotification({
+        show: true,
+        type: "success",
+        title: "Success downloading File :"+file.fileName,
+      });
     } else {
-      alert("Failed to download " + file.fileName);
+      setNotification({
+        show: true,
+        type: "error",
+        title: "Failed Downloading File :"+file.fileName,
+      });
     }
   };
+
+  const handleFileRemove = async (index) => {
+    const updatedFiles = [...files];
+    const fileObject = files[index];
+    updatedFiles.splice(index, 1);
+    setFiles(updatedFiles);
+    const check = confirm("Are you sure want to delete this file?");
+      if (check) {
+        const filePath = encodeURIComponent(fileObject.filePath);
+        setNotification({
+          show: true,
+          type: "general",
+          title: "Deleting file in server",
+        });
+        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
+        const response = await fetch(url, {
+          method: "DELETE",
+        });
+        const message = await response.text();
+        if (response.ok) {
+          setNotification({
+            show: true,
+            type: "success",
+            title: message,
+          });
+        } else {
+          setNotification({
+            show: true,
+            type: "error",
+            title: message,
+          });
+        }
+      }
+  };
+
   return (
-    <article className="p-6 text-base bg-slate-100 rounded-lg  m-5">
+    <>
+    {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
+      <article className="p-6 text-base bg-slate-100 rounded-lg  m-5">
       <footer className="flex justify-between items-center mb-2">
         <div className="flex items-center justify-center gap gap-2">
           <span className="inline-flex text-xl font-semibold items-center mr-3  text-gray-900 gap-5 capitalize">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-slate-500"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <User2 />
             {comment.author}
           </span>
           {comment.status === "Development" ? (
@@ -106,7 +176,10 @@ const CommentCard = ({ data }) => {
               />
             </svg>
           )}
-          <p className="text-sm font-semibold text-gray-600 capitalize">{comment.status}</p>
+          <p className="text-sm font-semibold text-gray-600 capitalize">
+            {comment.status}
+          </p>
+          <CommentModal onAction={onAction} id={comment.id} />
         </div>
         <p className="text-sm text-gray-600 capitalize">{date}</p>
       </footer>
@@ -118,30 +191,77 @@ const CommentCard = ({ data }) => {
         <div className="flex p-5 items-center justify-start w-full">
           <ul className="flex justify-start items-center gap gap-2 w-ful">
             {files.map((file, index) => (
-              <li key={index}>
+              <li key={index} className="bg-slate-200 inline-flex font-semibold justify-start gap-2  p-1 rounded-md">
                 <button
-                  className=" bg-slate-200 inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900 gap-2  p-1 rounded-md"
+                  className="  inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900"
                   onClick={() => handleDownload(file)}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    x="0px"
-                    y="0px"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 48 48"
-                  >
-                    <path d="M 12.5 4 C 10.019 4 8 6.019 8 8.5 L 8 39.5 C 8 41.981 10.019 44 12.5 44 L 35.5 44 C 37.981 44 40 41.981 40 39.5 L 40 20 L 28.5 20 C 26.019 20 24 17.981 24 15.5 L 24 4 L 12.5 4 z M 27 4.8789062 L 27 15.5 C 27 16.327 27.673 17 28.5 17 L 39.121094 17 L 27 4.8789062 z"></path>
-                  </svg>
-                  {file.fileName}
+                  <File />
+                  {file.fileName.substring(0, 20) + "..."}
                 </button>
+                <button
+                    type="button"
+                    className="ml-2"
+                    onClick={() => handleFileRemove(index)}
+                  >
+                    <Trash2 className="text-red-500" />
+                  </button>
               </li>
             ))}
           </ul>
         </div>
       )}
     </article>
+    </>
+    
   );
 };
 
 export default CommentCard;
+
+const CommentModal = ({ id, onAction }) => {
+  const options = ["edit", "delete"];
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleSelectChange = async (e) => {
+    const result = e.target.value;
+    setSelectedOption(result);
+    await onAction({
+      command: result,
+      id: id,
+    });
+    setIsModalOpen(false);
+  };
+  const handleModalOpen = (e) => {
+    setIsModalOpen(true);
+  };
+  return isModalOpen === true ? (
+    <div className="">
+      <select
+        id="dropdown"
+        onChange={handleSelectChange}
+        value={selectedOption || ""}
+        className="text-base p-2 bg-slate-200 rounded-sm"
+        required
+      >
+        <option value="" disabled>
+          Select Action
+        </option>
+        {options.map((option, index) => (
+          <option key={index} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  ) : (
+    <>
+      <button
+        class="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
+        onClick={handleModalOpen}
+      >
+        <Pencil />
+      </button>
+    </>
+  );
+};

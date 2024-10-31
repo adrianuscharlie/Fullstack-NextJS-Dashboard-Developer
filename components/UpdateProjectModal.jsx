@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
-import Modal from "react-modal";
 import { useState } from "react";
-
+import Notification from "./Notification";
 const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
   const [formData, setFormData] = useState({
     project_name: project.project_name,
@@ -13,7 +12,23 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     support: project.support,
     status: project.status,
   });
-  const [options, setOptions] = useState(["Development","Bugs", "Fixing Bugs","SIT","UAT", "Test Support", "Release"]);
+  const [options, setOptions] = useState([
+    "Development",
+    "Bugs",
+    "Fixing Bugs",
+    "SIT",
+    "UAT",
+    "Test Support",
+    "Release",
+  ]);
+  const [notification, setNotification] = useState({
+    show: false,
+    title: "",
+    type: "", // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -27,34 +42,72 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);
   };
-  useEffect(()=>{
+  useEffect(() => {
     const fetchUsers = async () => {
-        const userResponse = await fetch("/api/users");
-        const data = await userResponse.json();
-        setUsers(data);
-      };
+      const userResponse = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/api/user"
+      );
+      const data = await userResponse.json();
+      setUsers(data);
+    };
     fetchUsers();
-  },[])
+  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    const result = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/${project.project_name}  ${project.version}`, {
+    setNotification({
+      show: true,
+      type: "general",
+      title: "Editing Project",
+    });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BASE_URL +
+        `/api/projects/${project.project_name}  ${project.version}`,
+      {
         method: "PUT",
         headers: {
-          'Content-Type': 'application/json' // Set the Content-Type header to JSON
+          "Content-Type": "application/json", // Set the Content-Type header to JSON
         },
         body: JSON.stringify(formData),
+      }
+    );
+    const message=await response.text();
+    if (response.ok) {
+      setNotification({
+        show: true,
+        type: "success",
+        title: message,
       });
-    const text=await result.text();
-    alert(text);
-    if (result.ok){
-      handleSubmit(formData)
-      onClose()
+      handleSubmit(formData);
+    } else {
+      setNotification({
+        show: true,
+        type: "error",
+        title: message,
+      });
     }
+    onClose();
   };
+  useEffect(() => {
+    // If notification is closing, wait for it to close before navigating
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+      }, 3000); // Adjust the timeout to match your notification close animation duration
+
+      return () => clearTimeout(timeout);
+    }
+  }, [notification]);
   return (
     <>
-      <div className="fixed top-0 right-0 left-0 z-50 overflow-y-auto overflow-x-hidden flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-100 bg-opacity-50">
+      {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
+      <div className="fixed top-0 right-0 left-0 z-40 overflow-y-auto overflow-x-hidden flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-100 bg-opacity-50">
         <form
           className="relative p-4 w-full max-w-4xl max-h-full"
           onSubmit={onSubmit}
@@ -156,9 +209,7 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
                     className="text-base p-2 bg-gray-100 rounded-sm"
                     required
                   >
-                    <option value={project.status}>
-                      {project.status}
-                    </option>
+                    <option value={project.status}>{project.status}</option>
                     {options.map((option, index) => (
                       <option key={index} value={option}>
                         {option}

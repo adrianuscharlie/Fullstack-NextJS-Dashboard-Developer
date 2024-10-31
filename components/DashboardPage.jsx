@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useSession, signIn } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
+import {Mail,User2,FolderKanban} from 'lucide-react'
 const DashboardPage = ({ user, projects }) => {
   const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
@@ -68,10 +69,10 @@ const DashboardPage = ({ user, projects }) => {
         </h1>
       </div>
       <div className="flex justify-start items-center gap-5 text-md font-semibold border-b-2 border-black">
-        <p>Email : {user.email}</p>
-        <p>Role : {user.role}</p>
+        <p className="flex gap-3"><Mail/> {user.email}</p>
+        <p className="flex gap-3"><User2/> {user.role}</p>
         <p>Status : {user.isActive}</p>
-        <p>Total Project : {projects.length}</p>
+        <p className="flex gap-3"><FolderKanban/> {projects.length} Projects</p>
       </div>
 
       <p className="text-start">

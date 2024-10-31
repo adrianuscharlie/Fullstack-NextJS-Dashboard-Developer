@@ -6,7 +6,7 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
-
+import Notification from "./Notification";
 const CreateUser = ({handleSetLoading}) => {
   const router = useRouter();
   const [userData, setUserData] = useState({
@@ -18,6 +18,15 @@ const CreateUser = ({handleSetLoading}) => {
     isActive: true,
   });
 
+  const [notification, setNotification] = useState({
+    show: false,
+    title:'',
+    type: '', // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
+
   const handleUser = (e) => {
     const { name, value } = e.target;
     setUserData((prevData) => ({
@@ -28,7 +37,11 @@ const CreateUser = ({handleSetLoading}) => {
 
   const handleSubmit=async(event)=>{
     event.preventDefault();
-    alert("Creating new user!")
+    setNotification({
+      show: true,
+      type: 'general',
+      title:'Creating new user!'
+    });
     handleSetLoading(true);
     const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +`/api/user`, {
       method: "POST",
@@ -37,13 +50,43 @@ const CreateUser = ({handleSetLoading}) => {
         'Content-Type': 'application/json' // Set the Content-Type header to JSON
       },
     });
-    
-    if(response.ok) alert("Success creating new user!")
-    else alert("Failed to create new user")
+    const message=await response.text();
+    if(response.ok) {
+      setNotification({
+        show: true,
+        type: 'success',
+        title:message,
+      });
+    }
+    else {
+      setNotification({
+        show: true,
+        type: 'error',
+        title:message,
+      });
+    }
   handleSetLoading(false);
   }
+  useEffect(() => {
+    // If notification is closing, wait for it to close before navigating
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+        router.push('/projects');
+      }, 3000); // Adjust the timeout to match your notification close animation duration
 
+      return () => clearTimeout(timeout);
+    }
+  }, [notification.isClosing, router]);
   return (
+    <>
+    {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
     <form
       className="grid grid-cols-[1fr,3fr] gap-4 text-lg"
       onSubmit={handleSubmit}
@@ -128,7 +171,7 @@ const CreateUser = ({handleSetLoading}) => {
           Create User
         </button>
       </div>
-    </form>
+    </form></>
   );
 };
 

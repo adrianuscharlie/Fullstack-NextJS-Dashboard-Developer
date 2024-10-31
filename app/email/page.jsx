@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
+import Notification from "@/components/Notification";
 const EmailPage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -19,21 +20,42 @@ const EmailPage = () => {
   const [emailCC, setEmailCC] = useState(new Set([]));
   const [ccText, setCcText] = useState("");
   const [recippientText, setRecipientText] = useState("");
-
+  const [notification, setNotification] = useState({
+    show: false,
+    title:'',
+    type: '', // 'success', 'error', 'general'
+  });
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
   useEffect(() => {
     if (status === "loading") return;
+    
     if (!session) {
       router.push("/login");
       return;
     }
+    
     setFormEmail((prevData) => ({
       ...prevData,
-      ["from"]: session.user.email,
+      from: session.user.email,
     }));
+    
     setLoading(false);
-  }, [session]);
+  
+    if (notification.isClosing) {
+      const timeout = setTimeout(() => {
+        setNotification({ ...notification, show: false, isClosing: false });
+      }, 3000); // Adjust the timeout to match your notification close animation duration
+  
+      return () => clearTimeout(timeout);
+    }
+  }, [status, session, router, notification.isClosing]); // Dependency array
+  
 
   const [selectedFiles, setSelectedFiles] = useState([]);
+  
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData();
@@ -55,14 +77,29 @@ const EmailPage = () => {
         formData.append(`file_${index + 1}`, file);
       });
     }
-    setLoading(true);
+    setNotification({
+      show: true,
+      type: 'general',
+      title:'Sending Email...'
+    });
     const test = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/api/email", {
       method: "POST",
       body: formData,
     });
     const message = await test.text();
-    setLoading(false);
-    alert(message);
+    if(test.ok){
+      setNotification({
+        show: true,
+        type: 'success',
+        title:message,
+      });
+    }else{
+      setNotification({
+        show: true,
+        type: 'error',
+        title:message
+      });
+    }
   };
 
   const handleChange = (e) => {
@@ -90,6 +127,13 @@ const EmailPage = () => {
   }
   return (
     <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
+      {notification.show && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          onClose={closeNotification}
+        />
+      )}
       <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
         Send Email
         <span className="text-center capitalize"> KIS</span>

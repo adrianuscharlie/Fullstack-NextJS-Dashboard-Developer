@@ -59,6 +59,10 @@ const AdminPage = ({user,projects}) => {
   if(loading){
     return <Loading />
   }
+  if (!session) {
+    // Redirect to login page if not authenticated.
+    router.push("/login"); // Ensure router is used within useEffect
+  }
 
   const handleSelectChange = (e) => {
     const selectedOption = e.target.value;
