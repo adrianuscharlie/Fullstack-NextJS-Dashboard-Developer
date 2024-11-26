@@ -6,11 +6,14 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Notification from "./Notification";
 const UpdateProject = ({ users, projects, handleSetLoading }) => {
+  const {data:session,status}=useSession()
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
     project_name: "",
+    type:"",
     developer: "",
     support: "",
     version: "",
@@ -38,6 +41,7 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
       setProject((prevData) => ({
         ...prevData,
         ["project_name"]: selectedProject[0].project_name,
+        ["type"]:selectedProject[0].type,
         ["version"]: selectedProject[0].version,
         ["developer"]: selectedProject[0].developer,
         ["support"]: selectedProject[0].support,
@@ -47,6 +51,7 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
       setProject((prevData) => ({
         ...prevData,
         ["project_name"]: projectName,
+
       }));
     }
     setProjectVersion(selectedProject);
@@ -64,6 +69,7 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
       ["developer"]: foundProject.developer,
       ["support"]: foundProject.support,
       ["details"]: foundProject.details,
+      ["type"]:foundProject.type
     }));
   };
 
@@ -88,7 +94,8 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
       {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json", // Set the Content-Type header to JSON
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
         },
         body: JSON.stringify(project),
       }
@@ -249,6 +256,23 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
                   </select>
                 </div>
               </div>
+              <div className=" p-4">
+                <label htmlFor="dropdown">Project Type</label>
+              </div>
+              <div className=" p-4">
+                <label htmlFor="comment" className="sr-only">
+                  Project Type
+                </label>
+                <input
+                  onChange={handleProject}
+                  id="comment"
+                  className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                  placeholder="Enter project type...."
+                  name="type"
+                  required
+                  value={project.type}
+                />
+                </div>
               <div className=" p-4">
                 <label htmlFor="dropdown">Notes</label>
               </div>

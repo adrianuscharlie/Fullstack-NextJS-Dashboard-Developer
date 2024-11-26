@@ -46,6 +46,7 @@ const Accordion = ({ title, projects,users, isOpen, toggleAccordion }) => {
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
                 projectName={title}
+                type={projects[0].type}
                 details={projects[0].details}
                 projects={projects}
               />

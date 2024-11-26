@@ -57,7 +57,12 @@ const CreateBA = () => {
         const url = session.user.role.includes("manager")
           ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
           : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
-        const response = await fetch(url);
+        const response = await fetch(url,{
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setProjects(data);
@@ -72,7 +77,12 @@ const CreateBA = () => {
       }
     };
     const fetchUsers = async () => {
-        const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user");
+        const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user",{
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
+        });
         const data = await userResponse.json();
         setUsers(data);
       };

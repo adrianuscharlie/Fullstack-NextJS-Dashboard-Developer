@@ -16,7 +16,7 @@ import ReleaseBADev from "@/components/ReleaseBADev";
 import ReleaseBAUAT from "./ReleaseBAUAT";
 import ReleaseBaRelease from "./ReleaseBARelease";
 import CreateUser from "./CreateUser";
-const AdminPage = ({user,projects}) => {
+const AdminPage = ({projects}) => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const options = [
@@ -47,12 +47,17 @@ const AdminPage = ({user,projects}) => {
       router.push("/");
     }
     const fetchUsers = async () => {
-      const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user");
+      const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user",{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      });
       const data = await userResponse.json();
       setUsers(data);
     };
     fetchUsers();
-  }, [session, status, router]);
+  }, [session, router]);
   if (status == "loading") {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator
   }
@@ -79,10 +84,10 @@ const AdminPage = ({user,projects}) => {
   return (
     <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-10">
         <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
-          {user.namaLengkap} Dashboard
+          {session.user.namaLengkap} Dashboard
         </h1>
         <p className="text-start">
-        Welcome {user.namaLengkap}, manage all project from your dashboard!
+        Welcome {session.user.namaLengkap}, manage all project from your dashboard!
       </p>
       <div className="grid grid-cols-[1fr,3fr] gap-4  text-lg">
         {/* Replace the following divs with your actual content */}

@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import User from "@/models/User";
+import axios from "axios";
 const handler = NextAuth({
   secret: process.env.AUTH_SECRET,
   providers: [
@@ -10,51 +10,56 @@ const handler = NextAuth({
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      // authorize: async (credentials) => {
-      //   try {
-      //     console.log(process.env.NEXTAUTH_URL_INTERNAL)
-      //     const response = await fetch(`${process.env.NEXTAUTH_URL_INTERNAL}/auth/login`, {
-      //       method: 'POST',
-      //       headers: {
-      //         'Content-Type': 'application/json',
-      //       },
-      //       body: JSON.stringify({
-      //         username: credentials.username,
-      //         password: credentials.password,
-      //       }),
-      //     });
-          
-      //     console.log(`Response status: ${response.status}`);
-      //     const data = await response.json();
-      //     console.log(`Response data: ${JSON.stringify(data)}`);
-          
-      //     if (!response.ok) {
-      //       throw new Error(`Authentication failed: ${data.message || 'Unknown error'}`);
-      //     }
-      //     const { token, user } = data
-      //     if (user && token) {
-      //       return { ...user, token };
-      //     } else {
-      //       return null;
-      //     }
-      //   } catch (error) {
-      //     console.error("Error during authorization", error);
-      //     return null;
-      //   }
-      // },
       authorize: async (credentials) => {
-        const user = await User.login(credentials.username, credentials.password);
-        if (user) {
-          return Promise.resolve(user); // Return user object on success
-        } else {
-          return Promise.resolve(null); // Return null on failure
+        const url = `${process.env.NEXTAUTH_URL_INTERNAL}/auth/login`;
+        console.log(url, credentials);
+
+        try {
+          const response = await axios.post(
+            url,
+            {
+              userName: credentials.username, // Match property names in .NET API
+              password: credentials.password,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              timeout: 10000, // 10 seconds timeout
+            }
+          );
+
+          const data = response.data;
+          console.log(data);
+
+          // Check if the response data includes the expected properties
+          const { token, user } = data;
+          if (user && token) {
+            return { ...user, token }; // Pass token and user details back to NextAuth
+          } else {
+            throw new Error(
+              "Authentication failed: Missing token or user data"
+            );
+          }
+        } catch (error) {
+          // Log detailed error for debugging
+          console.error("Error during authorization:", error.message || error);
+
+          // Optionally, handle specific error types if needed
+          if (error.response && error.response.data) {
+            console.error("Server response error:", error.response.data);
+          } else if (error.code === "ECONNABORTED") {
+            console.error("Request timed out");
+          }
+
+          return null;
         }
       },
     }),
   ],
   pages: {
-    signIn: '/login',
-    signOut:'/login'
+    signIn: "/login",
+    signOut: "/login",
   },
   session: {
     strategy: "jwt",
@@ -62,7 +67,7 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.token;
+        token.accessToken = user.token; // Add token from user object
         token.user = {
           username: user.username,
           email: user.email,

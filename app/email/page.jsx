@@ -22,50 +22,48 @@ const EmailPage = () => {
   const [recippientText, setRecipientText] = useState("");
   const [notification, setNotification] = useState({
     show: false,
-    title:'',
-    type: '', // 'success', 'error', 'general'
+    title: "",
+    type: "", // 'success', 'error', 'general'
   });
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
   };
   useEffect(() => {
     if (status === "loading") return;
-    
+
     if (!session) {
       router.push("/login");
       return;
     }
-    
+
     setFormEmail((prevData) => ({
       ...prevData,
       from: session.user.email,
     }));
-    
+
     setLoading(false);
-  
+
     if (notification.isClosing) {
       const timeout = setTimeout(() => {
         setNotification({ ...notification, show: false, isClosing: false });
       }, 3000); // Adjust the timeout to match your notification close animation duration
-  
+
       return () => clearTimeout(timeout);
     }
   }, [status, session, router, notification.isClosing]); // Dependency array
-  
 
   const [selectedFiles, setSelectedFiles] = useState([]);
-  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData();
     const toEmails = [...emailRecipient].join(";");
     const ccEmails = [...emailCC].join(";");
-    const emailObject={
+    const emailObject = {
       ...formEmail,
-      to:toEmails,
-      cc:ccEmails
-    }
+      to: toEmails,
+      cc: ccEmails,
+    };
     setFormEmail((prevData) => ({
       ...prevData,
       to: toEmails,
@@ -79,25 +77,30 @@ const EmailPage = () => {
     }
     setNotification({
       show: true,
-      type: 'general',
-      title:'Sending Email...'
+      type: "general",
+      title: "Sending Email...",
     });
     const test = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/api/email", {
       method: "POST",
+
       body: formData,
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+        
+      },
     });
     const message = await test.text();
-    if(test.ok){
+    if (test.ok) {
       setNotification({
         show: true,
-        type: 'success',
-        title:message,
+        type: "success",
+        title: message,
       });
-    }else{
+    } else {
       setNotification({
         show: true,
-        type: 'error',
-        title:message
+        type: "error",
+        title: message,
       });
     }
   };

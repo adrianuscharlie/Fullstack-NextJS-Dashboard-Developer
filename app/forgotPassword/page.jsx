@@ -10,7 +10,12 @@ const ForgotPassword = () => {
     const [email,setEmail]=useState("");
     const handleSubmit=async(event)=>{
         event.preventDefault();
-        const response=await fetch(process.env.NEXT_PUBLIC_BASE_URL + `/api/user/${email}/forgotPassword`)
+        const response=await fetch(process.env.NEXT_PUBLIC_BASE_URL + `/api/user/${email}/forgotPassword`,{
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
+        })
         const message=await response.text();
         alert(message);
         if(response.ok){

@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     flexDirection: "col",
     backgroundColor: "white",
     padding: 25,
-    fontFamily:"Helvetica"
+    fontFamily: "Helvetica",
   },
   container: {
     flexDirection: "row",
@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
   },
   attachmentTable: {
     display: "table",
-    fontSize: 12,
     width: "100%",
+    fontSize:10,
     borderStyle: "solid",
     borderWidth: 1,
     borderColor: "#000",
@@ -76,13 +76,14 @@ const styles = StyleSheet.create({
   },
   cellAttachment: {
     padding: 5,
-    flex: 5, // Increases width for this column
+    flex: 10, // Increases width for this column
     textAlign: "start",
+
   },
   cellKeterangan: {
     padding: 5,
     flex: 1, // Keeps this column narrower
-    textAlign: "start",
+
   },
   imageContainer: {
     justifyContent: "start",
@@ -90,7 +91,46 @@ const styles = StyleSheet.create({
   imageAttachment: {
     marginVertical: 2,
   },
+  plainText: {
+    fontSize: 10,
+    lineHeight: 1.5,
+  },
+  xmlText: {
+    fontSize: 10,
+    whiteSpace: "pre-line",
+    lineHeight: 1.5,
+    padding: 5,
+  },
+  generalText: {
+
+    fontSize: 8,
+    whiteSpace: 'pre-wrap', // Preserve whitespace for formatting
+    margin: 10,
+  },
 });
+
+function formatXml(xml) {
+  const PADDING = '  '; // two spaces for indentation
+  let formatted = '';
+  let pad = 0;
+
+  // Trim leading and trailing whitespace
+  xml = xml.trim();
+
+  xml.split(/>\s*</).forEach((node) => {
+    // Ignore empty nodes or extra spaces
+    node = node.trim();
+    if (!node) return; // Skip empty nodes
+
+    // Adjust indentation level based on tags
+    if (node.match(/^\/\w/)) pad -= 1;
+    formatted += `${PADDING.repeat(Math.max(0, pad))}<${node}>\n`;
+    if (node.match(/^<?\w[^>]*[^\/]$/)) pad += 1;
+  });
+  const result=formatted.trim()
+  return result.substring(1,result.length-1)
+}
+
 
 const BADevDoc = ({ formData }) => {
   return (
@@ -354,13 +394,12 @@ const BADevDoc = ({ formData }) => {
         </View>
       </Page>
 
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" renderTextLayer={false} style={styles.page} >
         <Text style={styles.title}>Lampiran</Text>
         <View style={styles.attachmentTable}>
           <View style={styles.attachmentRow}>
             <Text style={styles.cellNo}>No</Text>
             <Text style={styles.cellAttachment}>Lampiran</Text>
-            <Text style={styles.cellKeterangan}>Hasil</Text>
           </View>
           {formData.attachments.map((attachment, index) => (
             <View style={styles.attachmentRow} key={index}>
@@ -376,20 +415,17 @@ const BADevDoc = ({ formData }) => {
                         src={image}
                       />
                     ))}
-                    <Text style={{ marginBottom: 10 }}>
-                      {attachment.description}
-                    </Text>
+                    <Text key={index} style={styles.xmlText}>{formatXml(attachment.description)}</Text>
                   </View>
                 ) : (
                   <View>
-                    <Text style={{ marginBottom: 10 ,fontWeight:"bold"}}>{attachment.title}</Text>
-                    <Text style={{ marginBottom: 10 }}>
-                      {attachment.description}
+                    <Text style={{ marginBottom: 10, fontWeight: "bold" }}>
+                      {attachment.title}
                     </Text>
+                    <Text key={index} style={styles.xmlText}>{formatXml(attachment.description)}</Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.cellKeterangan}>{attachment.hasil}</Text>
             </View>
           ))}
         </View>

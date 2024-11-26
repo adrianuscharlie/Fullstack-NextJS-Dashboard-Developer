@@ -38,8 +38,9 @@ const EditProfile = ({ user, handleSetLoading }) => {
         method: "PUT",
         body: JSON.stringify(userData),
         headers: {
-          "Content-Type": "application/json", // Set the Content-Type header to JSON
-        },
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
       }
     );
     const message = await response.text();

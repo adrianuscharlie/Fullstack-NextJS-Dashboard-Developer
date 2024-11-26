@@ -7,8 +7,10 @@ import {
   usePathname,
   redirect,
 } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Notification from "./Notification";
 const DeleteProject = ({ projects, handleSetLoading }) => {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
@@ -69,6 +71,10 @@ const DeleteProject = ({ projects, handleSetLoading }) => {
           `/api/projects/${project.project_name + "  " + project.version}`,
         {
           method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
         }
       );
       const { message } = await response.json();

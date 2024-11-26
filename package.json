@@ -13,12 +13,13 @@
     "dotenv": "^16.4.5",
     "fs": "^0.0.1-security",
     "jspdf": "^2.5.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.439.0",
     "mime-types": "^2.1.35",
     "moment": "^2.30.1",
     "net": "^1.0.2",
     "next": "14.1.0",
-    "next-auth": "^4.24.6",
+    "next-auth": "^4.24.10",
     "nextjs-progressbar": "^0.0.16",
     "react": "^18",
     "react-datepicker": "^7.4.0",
@@ -28,7 +29,8 @@
     "react-use-downloader": "^1.2.5",
     "serverless-mysql": "^1.5.5",
     "sharp": "^0.33.3",
-    "tls": "^0.0.1"
+    "tls": "^0.0.1",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",

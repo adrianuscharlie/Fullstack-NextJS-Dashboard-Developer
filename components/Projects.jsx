@@ -24,35 +24,33 @@ const LongText = ({ text, maxLength }) => {
   
 
 const ProjectsTable = ({data}) => {
-    const [projects,setProjects]=useState(data);
+    // const [projects,setProjects]=useState(data);
     const router=useRouter();
-    const handleSubmit=(projectID)=>{
-      event.preventDefault();
-      router.push(`/projects/${projectID}`);
-    }
   return (
     <section className='w-full mb-24 flex justify-start items-center'>
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500">
+        <table className="w-full  border-none text-sm text-left rtl:text-right text-gray-500">
             <thead className='text-xs text-gray-700 uppercase bg-gray-50 '>
                 <tr>
                 <th>Project Name</th>
+                <th>Project Type</th>
                 <th>Project Version</th>
                 <th>Project Developer</th>
                 <th>Project Support</th>
                 <th>Project Status</th>
-                <th>Notes</th>
+                {/* <th>Notes</th> */}
                 </tr>
             </thead>
             <tbody >
-                {projects.map((project,index)=>(
+                {data.map((project,index)=>(
                     <tr className='odd:bg-white even:bg-gray-50 hover:cursor-pointer ' key={index} onClick={()=>router.push("/projects/"+project.project_name+"  "+project.version)}>
                     <td>{project.project_name}</td>
+                    <td>{project.type}</td>
                     <td>{project.version}</td>
                     <td>{project.developer}</td>
                     <td>{project.support}</td>
                     <td>{project.status}</td>
                     {/* <td><button onClick={()=>handleSubmit(project.id)} className='rounded-md bg-blue-500 px-2 py-1 text-white'>Details</button></td> */}
-                    <td>{project.notes}</td>
+                    {/* <td>{project.notes}</td> */}
                     </tr>
                 ))}
             </tbody>

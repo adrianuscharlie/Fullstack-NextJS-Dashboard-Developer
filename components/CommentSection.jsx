@@ -55,7 +55,13 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           process.env.NEXT_PUBLIC_BASE_URL +
             `/api/projects/${
               project.project_name + "  " + project.version
-            }/comments`
+            }/comments`,
+            {
+              headers: {
+                'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                'Content-Type': 'application/json', // Optional: set content type if needed
+              }
+            }
         );
         if (result.ok) {
           const data = await result.json();
@@ -109,7 +115,8 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       {
         method,
         headers: {
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
         },
         body: JSON.stringify(commentObject),
       }
@@ -149,6 +156,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
         {
           method: "POST",
           body: formData,
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          }
         }
       );
 
@@ -162,7 +172,12 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
 
     // Send email notifications if needed
     const emailResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      }
     );
 
     const { emailDeveloper, emailSupport } = await emailResponse.json();
@@ -202,6 +217,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       {
         method: "POST",
         body: emailFormData,
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+        }
       }
     );
 
@@ -219,6 +237,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           {
             method: "POST",
             body: emailFormData,
+            headers: {
+              'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            }
           }
         );
 
@@ -262,7 +283,12 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
     setSelectedFiles([]);
     setIsOpen(false);
     setCcText("");
-    setEmailCC(new Set([]));
+    setEmailCC(new Set([
+      "handika_sp@indomaret.co.id",
+      "bima_ans@indomaret.co.id",
+      "hali.wimboko@indomaret.co.id",
+      session.user.email
+    ]));
     setSelectedOption(null);
     handleSetLoading(false);
   };
@@ -305,6 +331,10 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
         const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
         const response = await fetch(url, {
           method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
         });
         const message = await response.text();
         if (response.ok) {
@@ -353,6 +383,10 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
             }`,
           {
             method: "DELETE",
+            headers: {
+              'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              'Content-Type': 'application/json', // Optional: set content type if needed
+            }
           }
         );
         const { message } = await response.json();
@@ -367,6 +401,18 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           });
         }
       }
+    setText("");
+    setSelectedFiles([]);
+    setIsOpen(false);
+    setCcText("");
+    setEmailCC(new new Set([
+      "handika_sp@indomaret.co.id",
+      "bima_ans@indomaret.co.id",
+      "hali.wimboko@indomaret.co.id",
+      session.user.email
+    ]));
+    setSelectedOption(null);
+    handleSetLoading(false);
     }
   };
 

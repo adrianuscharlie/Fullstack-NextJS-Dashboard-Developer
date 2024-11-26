@@ -1,9 +1,7 @@
 "use client";
 import Loading from "@/components/Loading";
 import {
-  useSearchParams,
   usePathname,
-  redirect,
   useRouter,
 } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -15,16 +13,14 @@ const Project = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [project, setProject] = useState({});
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (status === "loading") return; // Don't do anything while session is loading
-    setLoading(false);
+
     if (!session) {
-      // Redirect to login page if not authenticated.
       router.push("/login");
     }
     const split = pathname.split("/");
@@ -32,7 +28,12 @@ const Project = () => {
     const fetchProject = async () => {
       try {
         const result = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + `/api/projects/${id}`
+          process.env.NEXT_PUBLIC_BASE_URL + `/api/projects/${id}`,{
+            headers: {
+              'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              'Content-Type': 'application/json', // Optional: set content type if needed
+            }
+          }
         );
         if (!result.ok) {
           throw new Error("Failed to fetch projects");
@@ -47,11 +48,9 @@ const Project = () => {
       }
     };
     fetchProject();
-  }, [session]);
+  }, [session,router]);
 
-  if (loadingProjects) {
-    return <Loading />; // You can replace this with a loading spinner or any other loading indicator
-  }
+  
   const handleStatus = (status) => {
     setProject((previous) => ({
       ...previous,
@@ -73,9 +72,18 @@ const Project = () => {
   const handleSetLoading=(value)=>{
     setLoading(value)
   }
-  if(loading){
+
+  if (!session) {
+    router.push("/login");
+  }
+  if(loadingProjects){
     return <Loading />
   }
+  if (loadingProjects) {
+    return <Loading />; // You can replace this with a loading spinner or any other loading indicator
+  }
+
+  
   return project? (
     <>
       <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
@@ -95,6 +103,10 @@ const Project = () => {
           <div className="w-full flex gap-2 items-center justify-start">
             <table className="w-full text-sm text-left rtl:text-right text-gray-500">
               <tbody>
+              <tr className="odd:bg-white even:bg-gray-50">
+                  <td>Project Type</td>
+                  <td>{project.type}</td>
+                </tr>
                 <tr className="odd:bg-white even:bg-gray-50">
                   <td>Version</td>
                   <td>{project.version}</td>

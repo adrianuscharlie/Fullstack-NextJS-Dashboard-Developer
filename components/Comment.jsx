@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { File, Pencil, User2, Day, Trash2 } from "lucide-react";
 import Notification from "./Notification";
+import { useSession } from "next-auth/react";
 const CommentCard = ({ data, onAction }) => {
+  const {data:session,status}=useSession();
   const [comment, setComment] = useState(data);
   const [files, setFiles] = useState([]);
   const [date, setDate] = useState("");
@@ -18,7 +20,10 @@ const CommentCard = ({ data, onAction }) => {
     const fetchFile = async () => {
       try {
         const response = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + `/api/files/comments/${comment.id}`
+          process.env.NEXT_PUBLIC_BASE_URL + `/api/files/comments/${comment.id}`,
+          {headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          }}
         );
         if (response.ok) {
           const data = await response.json();
@@ -57,7 +62,12 @@ const CommentCard = ({ data, onAction }) => {
       title: "Downloading File :" + file.fileName +" .....", 
     });
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`
+      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`,{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      }
     );
     if (response.ok) {
       const blob = await response.blob();
@@ -106,6 +116,10 @@ const CommentCard = ({ data, onAction }) => {
         const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
         const response = await fetch(url, {
           method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            'Content-Type': 'application/json', // Optional: set content type if needed
+          }
         });
         const message = await response.text();
         if (response.ok) {

@@ -4,7 +4,9 @@ import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
 import BAUATDoc from "./BAUATDoc";
 import Image from "next/image";
 import { PlusCircle, XIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 const ReleaseBAUAT = ({ projects, users }) => {
+  const {data:session,status}=useSession()
   const [projectVersion, setProjectVersion] = useState([]);
   const [attachments, setAttachments] = useState([
     { title: "", description: "", images: [], hasil: "Sesuai" },
@@ -104,7 +106,12 @@ const ReleaseBAUAT = ({ projects, users }) => {
 
   const handleNoDokumen = async (e) => {
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen"
+      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      }
     );
     const docomentNumber = await response.text();
     setFormData((prevData) => ({

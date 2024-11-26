@@ -4,7 +4,9 @@ import ReactDOM from "react-dom";
 import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
 import BAUATDoc from "./BAUATDoc";
 import BAReleaseDoc from "./BAReleaseDoc";
+import { useSession } from "next-auth/react";
 const ReleaseBaRelease = ({ projects }) => {
+  const {data:session,status}=useSession()
   const [projectVersion, setProjectVersion] = useState([]);
   const [formData, setFormData] = useState({
     noDokumen: "",
@@ -57,6 +59,21 @@ const ReleaseBaRelease = ({ projects }) => {
       ["date"]: formatedDate,
     }));
   };
+  const handleNoDokumen = async (e) => {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      }
+    );
+    const docomentNumber = await response.text();
+    setFormData((prevData) => ({
+      ...prevData,
+      ["noDokumen"]: docomentNumber,
+    }));
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     const currentDate = new Date();
@@ -87,7 +104,7 @@ const ReleaseBaRelease = ({ projects }) => {
   return (
     <>
       <form
-        className="grid grid-cols-[1fr,3fr] gap-4 mt-10  text-lg"
+        className="grid grid-cols-[1fr,3fr] gap-4  text-lg"
         onSubmit={handleSubmit}
       >
         <div className="p-4">
@@ -142,6 +159,23 @@ const ReleaseBaRelease = ({ projects }) => {
             </div>
             {formData.version !== "" && (
               <>
+              <div className="p-4">
+                  <label htmlFor="dropdown">No Dokumen</label>
+                </div>
+                <div className="p-4 flex items-start gap-10">
+                  {/* Conditionally render the button when noDokumen is null */}
+                  {!formData.noDokumen && (
+                    <button
+                      onClick={handleNoDokumen}
+                      className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg"
+                    >
+                      Generate No Dokumen
+                    </button>
+                  )}
+
+                  {/* Display the noDokumen value if available */}
+                  {formData.noDokumen && <div>{formData.noDokumen}</div>}
+                </div>
                 <div className=" p-4">
                   <label htmlFor="dropdown">Informasi Perubahan</label>
                 </div>

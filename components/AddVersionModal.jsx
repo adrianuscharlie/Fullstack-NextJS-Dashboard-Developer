@@ -10,6 +10,7 @@ const AddVersionModal = ({
   isOpen,
   onClose,
   projectName,
+  type,
   details,
   projects,
 }) => {
@@ -17,6 +18,7 @@ const AddVersionModal = ({
   const router=useRouter();
   const [formData, setFormData] = useState({
     project_name: projectName,
+    type:type,
     notes: "",
     details: details,
     version: "",
@@ -56,7 +58,8 @@ const AddVersionModal = ({
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects`, {
         method: "POST",
         headers: {
-          'Content-Type': 'application/json' // Set the Content-Type header to JSON
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
         },
         body: JSON.stringify(formData),
       });
@@ -130,6 +133,22 @@ const AddVersionModal = ({
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
                       disabled
+                    />
+                  </div>
+                </div>
+                <div className="p-4">
+                  <label htmlFor="dropdown">Project Type</label>
+                </div>
+                <div className="p-4">
+                  <div>
+                    <input
+                      type="text"
+                      id="inputField"
+                      name="type"
+                      value={formData.type}
+                      onChange={handleChange}
+                      className="text-base w-full p-2 bg-gray-100"
+                      
                     />
                   </div>
                 </div>

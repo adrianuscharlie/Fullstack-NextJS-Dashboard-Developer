@@ -6,8 +6,10 @@ import { BlobProvider,PDFViewer } from "@react-pdf/renderer";
 import DatePicker from "react-datepicker";
 import { XIcon,PlusCircle } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
+import { useSession } from "next-auth/react";
 
 const ReleaseBADev = ({ projects, users }) => {
+  const {data:session,status}=useSession();
   const [projectVersion, setProjectVersion] = useState([]);
   const [attachments, setAttachments] = useState([
     { title: "", description: "", images: [], hasil: "Sesuai" },
@@ -77,7 +79,12 @@ const ReleaseBADev = ({ projects, users }) => {
   };
   const handleNoDokumen = async (e) => {
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen"
+      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+        headers: {
+          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          'Content-Type': 'application/json', // Optional: set content type if needed
+        }
+      }
     );
     const docomentNumber = await response.text();
     setFormData((prevData) => ({
@@ -424,7 +431,7 @@ const ReleaseBADev = ({ projects, users }) => {
                           <label className="block text-sm font-medium text-gray-700">
                             Title of Attachment
                           </label>
-                          <input
+                          <textarea
                             type="text"
                             value={attachment.title}
                             onChange={(e) =>
@@ -448,20 +455,6 @@ const ReleaseBADev = ({ projects, users }) => {
                                 "description",
                                 e.target.value
                               )
-                            }
-                            placeholder="Enter description"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        {/* Attachment Description */}
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Attachment Result
-                          </label>
-                          <input
-                            value={attachment.hasil}
-                            onChange={(e) =>
-                              handleInputChange(index, "hasil", e.target.value)
                             }
                             placeholder="Enter description"
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -529,7 +522,7 @@ const ReleaseBADev = ({ projects, users }) => {
                       {({ url, ...rest }) => {
                         return (
                           <a href={url} target="_blank">
-                            Create BA UAT
+                            Create BA Development
                           </a>
                         );
                       }}
