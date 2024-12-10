@@ -270,6 +270,14 @@ const BADevDoc = ({ formData }) => {
                 <Text>{formData.deskripsi}</Text>
               </View>
             </View>
+            <View style={styles.tableRow}>
+              <View style={{ ...styles.tableCell, width: "25%" }}>
+                <Text styles={styles.tableHeading}>Kategori Pengembangan / Perubahan</Text>
+              </View>
+              <View style={{ ...styles.tableCell, width: "75%" }}>
+                <Text>{formData.kategori}</Text>
+              </View>
+            </View>
           </View>
         </View>
         <View

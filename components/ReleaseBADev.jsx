@@ -28,10 +28,11 @@ const ReleaseBADev = ({ projects, users }) => {
       "Sesuai dengan pengujian, maka Berita Acara Development telah selesai dilakukan finalisasi untuk sistem aplikasi di atas dan hasilnya DITERIMA",
     attachments: attachments,
     developer: "",
-    manager: "S.Handika Panudju",
+    manager: "S.Handika Setiawan Panudju",
     businessAnalyst: "",
     tglAwal: "",
     tglAkhir: "",
+    kategori:""
   });
 
   const handleSelectedProject = (e) => {
@@ -337,6 +338,33 @@ const ReleaseBADev = ({ projects, users }) => {
                     />
                   </div>
                 </div>
+                <div className="p-4">
+              <label htmlFor="dropdown">Kategori Pengembangan/Perubahan</label>
+            </div>
+            <div className="p-4">
+              <div>
+                <select
+                  onChange={handleChange}
+                  value={formData.kategori || ""}
+                  name="kategori"
+                  className="text-base p-2 bg-gray-100"
+                >
+                  <option value="" disabled >
+                    Select an option 
+                  </option>
+                  <option value="Low" >
+                    Low 
+                  </option>
+                  <option value="Medium" >
+                    Medium
+                  </option>
+                  <option value="High" >
+                    High
+                  </option>
+                  
+                </select>
+              </div>
+            </div>
                 <div className="p-4">
                   <label htmlFor="dropdown">Partner</label>
                 </div>
