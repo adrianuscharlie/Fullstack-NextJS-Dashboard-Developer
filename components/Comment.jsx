@@ -3,7 +3,7 @@ import { File, Pencil, User2, Day, Trash2 } from "lucide-react";
 import Notification from "./Notification";
 import { useSession } from "next-auth/react";
 const CommentCard = ({ data, onAction }) => {
-  const {data:session,status}=useSession();
+  const { data: session, status } = useSession();
   const [comment, setComment] = useState(data);
   const [files, setFiles] = useState([]);
   const [date, setDate] = useState("");
@@ -20,10 +20,13 @@ const CommentCard = ({ data, onAction }) => {
     const fetchFile = async () => {
       try {
         const response = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + `/api/files/comments/${comment.id}`,
-          {headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          }}
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/files/comments/${comment.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            },
+          }
         );
         if (response.ok) {
           const data = await response.json();
@@ -59,14 +62,15 @@ const CommentCard = ({ data, onAction }) => {
     setNotification({
       show: true,
       type: "general",
-      title: "Downloading File :" + file.fileName +" .....", 
+      title: "Downloading File :" + file.fileName + " .....",
     });
     const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`,{
+      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`,
+      {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        }
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
       }
     );
     if (response.ok) {
@@ -89,13 +93,13 @@ const CommentCard = ({ data, onAction }) => {
       setNotification({
         show: true,
         type: "success",
-        title: "Success downloading File :"+file.fileName,
+        title: "Success downloading File :" + file.fileName,
       });
     } else {
       setNotification({
         show: true,
         type: "error",
-        title: "Failed Downloading File :"+file.fileName,
+        title: "Failed Downloading File :" + file.fileName,
       });
     }
   };
@@ -106,41 +110,41 @@ const CommentCard = ({ data, onAction }) => {
     updatedFiles.splice(index, 1);
     setFiles(updatedFiles);
     const check = confirm("Are you sure want to delete this file?");
-      if (check) {
-        const filePath = encodeURIComponent(fileObject.filePath);
+    if (check) {
+      const filePath = encodeURIComponent(fileObject.filePath);
+      setNotification({
+        show: true,
+        type: "general",
+        title: "Deleting file in server",
+      });
+      const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
+      });
+      const message = await response.text();
+      if (response.ok) {
         setNotification({
           show: true,
-          type: "general",
-          title: "Deleting file in server",
+          type: "success",
+          title: message,
         });
-        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
-        const response = await fetch(url, {
-          method: "DELETE",
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
-          }
+      } else {
+        setNotification({
+          show: true,
+          type: "error",
+          title: message,
         });
-        const message = await response.text();
-        if (response.ok) {
-          setNotification({
-            show: true,
-            type: "success",
-            title: message,
-          });
-        } else {
-          setNotification({
-            show: true,
-            type: "error",
-            title: message,
-          });
-        }
       }
+    }
   };
 
   return (
     <>
-    {notification.show && (
+      {notification.show && (
         <Notification
           type={notification.type}
           title={notification.title}
@@ -148,86 +152,96 @@ const CommentCard = ({ data, onAction }) => {
         />
       )}
       <article className="p-6 text-base bg-slate-100 rounded-lg  m-5">
-      <footer className="flex justify-between items-center mb-2">
-        <div className="flex items-center justify-center gap gap-2">
-          <span className="inline-flex text-xl font-semibold items-center mr-3  text-gray-900 gap-5 capitalize">
-            <User2 />
-            {comment.author}
-          </span>
-          {comment.status === "Development" ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6 text-yellow-500"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
-              />
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6 text-green-500"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              />
-            </svg>
-          )}
-          <p className="text-sm font-semibold text-gray-600 capitalize">
-            {comment.status}
-          </p>
-          <CommentModal onAction={onAction} id={comment.id} />
-        </div>
-        <p className="text-sm text-gray-600 capitalize">{date}</p>
-      </footer>
+        <footer className="flex justify-between items-center mb-2">
+          <div className="flex items-center justify-center gap gap-2">
+            <span className="inline-flex text-xl font-semibold items-center mr-3  text-gray-900 gap-5 capitalize">
+              <User2 />
+              {comment.author}
+            </span>
+            {comment.status === "Development" ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6 text-yellow-500"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6 text-green-500"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                />
+              </svg>
+            )}
+            <p className="text-sm font-semibold text-gray-600 capitalize">
+              {comment.status}
+            </p>
+            {comment.author === session.user.namaLengkap ? (
+              <CommentModal onAction={onAction} id={comment.id} />
+            ) : (
+              <></>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 capitalize">{date}</p>
+        </footer>
 
-      <p className="text-gray-500 text-md" style={{ whiteSpace: "pre-line" }}>
-        {comment.text}
-      </p>
-      {files.length > 0 && (
-        <div className="flex p-5 items-center justify-start w-full">
-          <ul className="flex justify-start items-center gap gap-2 w-ful">
-            {files.map((file, index) => (
-              <li key={index} className="bg-slate-200 inline-flex font-semibold justify-start gap-2  p-1 rounded-md">
-                <button
-                  className="  inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900"
-                  onClick={() => handleDownload(file)}
+        <p className="text-gray-500 text-md" style={{ whiteSpace: "pre-line" }}>
+          {comment.text}
+        </p>
+        {files.length > 0 && (
+          <div className="flex p-5 items-center justify-start w-full">
+            <ul className="flex justify-start items-center gap gap-2 w-ful">
+              {files.map((file, index) => (
+                <li
+                  key={index}
+                  className="bg-slate-200 inline-flex font-semibold justify-start gap-2  p-1 rounded-md"
                 >
-                  <File />
-                  {file.fileName.substring(0, 20) + "..."}
-                </button>
-                <button
-                    type="button"
-                    className="ml-2"
-                    onClick={() => handleFileRemove(index)}
+                  <button
+                    className="  inline-flex font-semibold justify-start items-start  mr-3 text-sm text-gray-900"
+                    onClick={() => handleDownload(file)}
                   >
-                    <Trash2 className="text-red-500" />
+                    <File />
+                    {file.fileName.substring(0, 20) + "..."}
                   </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </article>
+                  {comment.author === session.user.namaLengkap ? (
+                    <button
+                      type="button"
+                      className="ml-2"
+                      onClick={() => handleFileRemove(index)}
+                    >
+                      <Trash2 className="text-red-500" />
+                    </button>
+                  ) : (
+                    <></>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </article>
     </>
-    
   );
 };
 
