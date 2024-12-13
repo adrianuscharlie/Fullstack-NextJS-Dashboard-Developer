@@ -25,6 +25,7 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
     "SIT",
     "UAT",
     "Test Support",
+    "Test Release",
     "Release",
   ]);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -35,7 +36,7 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       "handika_sp@indomaret.co.id",
       "bima_ans@indomaret.co.id",
       "hali.wimboko@indomaret.co.id",
-      session.user.email
+      session.user.email,
     ])
   );
   const [ccText, setCcText] = useState("");
@@ -56,12 +57,12 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
             `/api/projects/${
               project.project_name + "  " + project.version
             }/comments`,
-            {
-              headers: {
-                'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-                'Content-Type': 'application/json', // Optional: set content type if needed
-              }
-            }
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
+          }
         );
         if (result.ok) {
           const data = await result.json();
@@ -115,8 +116,8 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       {
         method,
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
         },
         body: JSON.stringify(commentObject),
       }
@@ -157,8 +158,8 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           method: "POST",
           body: formData,
           headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          }
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          },
         }
       );
 
@@ -170,101 +171,104 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       });
     }
 
-    // Send email notifications if needed
-    const emailResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,{
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
+    if (isChecked) {
+      // Send email notifications if needed
+      const emailResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
         }
+      );
+
+      const { emailDeveloper, emailSupport } = await emailResponse.json();
+      let emailFrom = session.user.email;
+      let emailRecipient = emailDeveloper;
+
+      if (emailFrom === emailDeveloper) {
+        emailRecipient = emailSupport;
+      } else if (emailFrom === emailSupport) {
+        emailRecipient = emailDeveloper;
+      } else {
+        emailRecipient += `;${emailSupport}`;
       }
-    );
 
-    const { emailDeveloper, emailSupport } = await emailResponse.json();
-    let emailFrom = session.user.email;
-    let emailRecipient = emailDeveloper;
-
-    if (emailFrom === emailDeveloper) {
-      emailRecipient = emailSupport;
-    } else if (emailFrom === emailSupport) {
-      emailRecipient = emailDeveloper;
-    } else {
-      emailRecipient += `;${emailSupport}`;
-    }
-
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Sending email notification, please wait...",
-    });
-
-    const emailObject = {
-      subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
-      body: text,
-      from: emailFrom,
-      to: emailRecipient,
-      cc: [...emailCC].join(";"),
-    };
-
-    const emailFormData = new FormData();
-    emailFormData.append("email", JSON.stringify(emailObject));
-    selectedFiles.forEach((file, index) => {
-      emailFormData.append(`file_${index + 1}`, file);
-    });
-
-    const sendEmail = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-      {
-        method: "POST",
-        body: emailFormData,
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-        }
-      }
-    );
-
-    const emailMessage = await sendEmail.text();
-    if (!sendEmail.ok) {
-      for (let i = 0; i < 3; i++) {
-        setNotification({
-          show: true,
-          type: "general",
-          title: "Resending Email...",
-        });
-
-        const resendEmail = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-          {
-            method: "POST",
-            body: emailFormData,
-            headers: {
-              'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            }
-          }
-        );
-
-        const resendMessage = await resendEmail.text();
-        if (resendEmail.ok) {
-          setNotification({
-            show: true,
-            type: "success",
-            title: resendMessage,
-          });
-          break;
-        } else {
-          setNotification({
-            show: true,
-            type: "error",
-            title: resendMessage,
-          });
-        }
-      }
-    } else {
       setNotification({
         show: true,
-        type: "success",
-        title: emailMessage,
+        type: "general",
+        title: "Sending email notification, please wait...",
       });
+
+      const emailObject = {
+        subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
+        body: text,
+        from: emailFrom,
+        to: emailRecipient,
+        cc: [...emailCC].join(";"),
+      };
+
+      const emailFormData = new FormData();
+      emailFormData.append("email", JSON.stringify(emailObject));
+      selectedFiles.forEach((file, index) => {
+        emailFormData.append(`file_${index + 1}`, file);
+      });
+
+      const sendEmail = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+        {
+          method: "POST",
+          body: emailFormData,
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          },
+        }
+      );
+
+      const emailMessage = await sendEmail.text();
+      if (!sendEmail.ok) {
+        for (let i = 0; i < 3; i++) {
+          setNotification({
+            show: true,
+            type: "general",
+            title: "Resending Email...",
+          });
+
+          const resendEmail = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+            {
+              method: "POST",
+              body: emailFormData,
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              },
+            }
+          );
+
+          const resendMessage = await resendEmail.text();
+          if (resendEmail.ok) {
+            setNotification({
+              show: true,
+              type: "success",
+              title: resendMessage,
+            });
+            break;
+          } else {
+            setNotification({
+              show: true,
+              type: "error",
+              title: resendMessage,
+            });
+          }
+        }
+      } else {
+        setNotification({
+          show: true,
+          type: "success",
+          title: emailMessage,
+        });
+      }
     }
 
     // Update UI and clear form
@@ -283,12 +287,14 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
     setSelectedFiles([]);
     setIsOpen(false);
     setCcText("");
-    setEmailCC(new Set([
-      "handika_sp@indomaret.co.id",
-      "bima_ans@indomaret.co.id",
-      "hali.wimboko@indomaret.co.id",
-      session.user.email
-    ]));
+    setEmailCC(
+      new Set([
+        "handika_sp@indomaret.co.id",
+        "bima_ans@indomaret.co.id",
+        "hali.wimboko@indomaret.co.id",
+        session.user.email,
+      ])
+    );
     setSelectedOption(null);
     handleSetLoading(false);
   };
@@ -332,9 +338,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
         const response = await fetch(url, {
           method: "DELETE",
           headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
-          }
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
         });
         const message = await response.text();
         if (response.ok) {
@@ -343,7 +349,7 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
             type: "success",
             title: message,
           });
-          setEditTogle(null)
+          setEditTogle(null);
         } else {
           setNotification({
             show: true,
@@ -384,9 +390,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           {
             method: "DELETE",
             headers: {
-              'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-              'Content-Type': 'application/json', // Optional: set content type if needed
-            }
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
           }
         );
         const { message } = await response.json();
@@ -401,18 +407,20 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
           });
         }
       }
-    setText("");
-    setSelectedFiles([]);
-    setIsOpen(false);
-    setCcText("");
-    setEmailCC(new new Set([
-      "handika_sp@indomaret.co.id",
-      "bima_ans@indomaret.co.id",
-      "hali.wimboko@indomaret.co.id",
-      session.user.email
-    ]));
-    setSelectedOption(null);
-    handleSetLoading(false);
+      setText("");
+      setSelectedFiles([]);
+      setIsOpen(false);
+      setCcText("");
+      setEmailCC(
+        new new Set([
+          "handika_sp@indomaret.co.id",
+          "bima_ans@indomaret.co.id",
+          "hali.wimboko@indomaret.co.id",
+          session.user.email,
+        ])()
+      );
+      setSelectedOption(null);
+      handleSetLoading(false);
     }
   };
 

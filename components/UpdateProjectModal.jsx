@@ -22,6 +22,7 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     "SIT",
     "UAT",
     "Test Support",
+    "Test Release",
     "Release",
   ]);
   const [notification, setNotification] = useState({
@@ -230,7 +231,8 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
                   <select
                     id="dropdown"
                     onChange={handleChange}
-                    value={selectedOption || ""}
+                    value={formData['status'] || ""}
+                    name="status"
                     className="text-base p-2 bg-gray-100 rounded-sm"
                     required
                   >

@@ -21,7 +21,16 @@ const UpdateProject = ({ users, projects, handleSetLoading }) => {
     notes: "",
     details: "",
   });
-  const choice = ["Bugs", "Fixing Bugs", "Test Support", "Test Release"];
+  const choice = [
+    "Development",
+    "Bugs",
+    "Fixing Bugs",
+    "SIT",
+    "UAT",
+    "Test Support",
+    "Test Release",
+    "Release",
+  ];
   const [options, setOptions] = useState(choice);
   const [selectedOption, setSelectedOption] = useState(null);
   const [notification, setNotification] = useState({
