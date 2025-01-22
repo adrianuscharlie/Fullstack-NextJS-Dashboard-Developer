@@ -5,8 +5,9 @@ import BAUATDoc from "./BAUATDoc";
 import Image from "next/image";
 import { PlusCircle, XIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 const ReleaseBAUAT = ({ projects, users }) => {
-  const {data:session,status}=useSession()
+  const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
   const [attachments, setAttachments] = useState([
     { title: "", description: "", images: [], hasil: "Sesuai" },
@@ -105,19 +106,19 @@ const ReleaseBAUAT = ({ projects, users }) => {
   };
 
   const handleNoDokumen = async (e) => {
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+    await axios
+      .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen", {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        }
-      }
-    );
-    const docomentNumber = await response.text();
-    setFormData((prevData) => ({
-      ...prevData,
-      ["noDokumen"]: docomentNumber,
-    }));
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
+      })
+      .then((response) => {
+        setFormData((prevData) => ({
+          ...prevData,
+          ["noDokumen"]: response.data,
+        }));
+      }).catch((error)=>console.log(error.message))
   };
 
   // Handle adding a new attachment

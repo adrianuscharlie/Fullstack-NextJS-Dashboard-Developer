@@ -1,55 +1,10 @@
 "use client";
 import React, { useEffect } from "react";
-import Loading from "@/components/Loading";
 import ProjectsTable from "@/components/Projects";
-import ReleaseBADev from "@/components/ReleaseBADev";
-import Image from "next/image";
-import { useSession, signIn } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import {Mail,User2,FolderKanban} from 'lucide-react'
 const DashboardPage = ({ user, projects }) => {
-  const { data: session, status } = useSession();
-  const [formData, setFormData] = useState({
-    step: 1,
-    option: "",
-    inputField: "",
-    updateField: "",
-  });
-  const options = [
-    "View Project",
-    "Release BA Development",
-    "Release BA UAT",
-    "Release BA Release",
-  ];
-  const [option, setOption] = useState([]);
-  const [selectedOption, setSelectedOption] = useState(null);
-
-  useEffect(() => {
-    if (user.role === "developer") {
-      const option = options.filter(
-        (item) => item !== "Release BA UAT" && item !== "Release BA Release"
-      );
-      setOption(option);
-    } else if (session.user.role === "support") {
-      const option = options.filter(
-        (item) => item !== "Release BA Development"
-      );
-      setOption(option);
-    } else {
-      setOption(options);
-    }
-  }, []);
-
-  const handleSelectChange = (e) => {
-    const selectedOption = e.target.value;
-    setSelectedOption(selectedOption);
-    setFormData((prevData) => ({
-      ...prevData,
-      option: selectedOption,
-    }));
-  };
-  // Fetch user data
   return (
     <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-5">
       <div className="flex justify-start items-end gap-5">

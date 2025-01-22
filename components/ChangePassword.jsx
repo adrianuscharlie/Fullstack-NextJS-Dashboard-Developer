@@ -3,9 +3,9 @@ import React from "react";
 import Loading from "@/components/Loading";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { CloudUpload } from "lucide-react";
 import Notification from "./Notification";
+import axios from "axios";
 const ChangePassword = ({ user, handleSetLoading }) => {
   const [formData, setFormData] = useState({
     namaLengkap: user.namaLengkap,
@@ -13,6 +13,7 @@ const ChangePassword = ({ user, handleSetLoading }) => {
     newPassword: "",
     confirm: "",
   });
+  const { data: session, status } = useSession();
   const [notification, setNotification] = useState({
     show: false,
     title: "",
@@ -20,6 +21,13 @@ const ChangePassword = ({ user, handleSetLoading }) => {
   });
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
+  };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
   };
   const handleForm = (e) => {
     const { name, value } = e.target;
@@ -31,53 +39,30 @@ const ChangePassword = ({ user, handleSetLoading }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (formData.newPassword == formData.confirm) {
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Change User Password....",
-      });
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL +
-          `/api/user/changePassword_${user.namaLengkap}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(formData),
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
+      showNotification("general", "Change User Password....");
+      await axios
+        .put(
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/user/changePassword_${user.namaLengkap}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
           }
-        }
-      );
-      const message = await response.text();
-      handleSetLoading(false);
-      alert(message);
-      if (response.ok) {
-        setNotification({
-          show: true,
-          type: "success",
-          title: message,
+        )
+        .then(async (response) => {
+          if (response.status === 200) {
+            showNotification("success", "Password has been changed!");
+            showNotification(
+              "general",
+              "Will be redirect into login page to login again"
+            );
+            await signOut();
+          } else showNotification("error", "Failed to change password");
         });
-        setNotification({
-          show: true,
-          type: "success",
-          title: "Will be redirect into login page to login again",
-        });
-        await signOut();
-        router.push(process.env.NEXT_PUBLIC_BASE_URL + "/login");
-      } else {
-        setNotification({
-          show: true,
-          type: "error",
-          title: message,
-        });
-      }
-    } else {
-      setNotification({
-        show: true,
-        type: "error",
-        title: "New password must be match",
-      });
-    }
+    } else showNotification("error", "new password must be match!");
   };
   return (
     <>

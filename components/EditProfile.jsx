@@ -1,14 +1,14 @@
 "use client";
 import React from "react";
-import Loading from "@/components/Loading";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Notification from "./Notification";
 import { CloudUpload } from "lucide-react";
+import axios from "axios";
 
-const EditProfile = ({ user, handleSetLoading }) => {
+const EditProfile = ({ user }) => {
   const [userData, setUserData] = useState(user);
+  const { data: session, status } = useSession();
   const [notification, setNotification] = useState({
     show: false,
     title: "",
@@ -16,6 +16,12 @@ const EditProfile = ({ user, handleSetLoading }) => {
   });
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
+  };
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
   };
   const handleUser = (e) => {
     const { name, value } = e.target;
@@ -27,44 +33,31 @@ const EditProfile = ({ user, handleSetLoading }) => {
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Editing User Profile....",
-    });
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + `/api/user/edit__${user.namaLengkap}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(userData),
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
+    showNotification("general", "Editing User Profile....");
+    await axios
+      .put(
+        process.env.NEXT_PUBLIC_BASE_URL +
+          `/api/user/edit__${user.namaLengkap}`,
+        userData,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
         }
-      }
-    );
-    const message = await response.text();
-    handleSetLoading(false);
-    if (response.ok) {
-      setNotification({
-        show: true,
-        type: "success",
-        title: message,
+      )
+      .then(async(response) => {
+        if (response.status === 200) {
+          showNotification("success", "Success updating profile!");
+          showNotification(
+            "general",
+            "Will be redirect into login page to login again"
+          );
+          await signOut();
+        } else {
+          showNotification("error", "Failed updating profile!");
+        }
       });
-      setNotification({
-        show: true,
-        type: "success",
-        title: "Will be redirect into login page to login again",
-      });
-      signOut();
-      router.push("/login");
-    }else{
-      setNotification({
-        show: true,
-        type: "error",
-        title: message,
-      });
-    }
   };
   return (
     <>

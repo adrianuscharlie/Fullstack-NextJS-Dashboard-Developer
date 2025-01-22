@@ -1,19 +1,15 @@
 "use client";
 import React from "react";
 import { useState, useEffect } from "react";
-import {
-  useRouter,
-  useSearchParams,
-  usePathname,
-  redirect,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
-const InputProject = ({ users, handleSetLoading }) => {
+import axios from "axios";
+const InputProject = ({ users }) => {
   const { data: session, status } = useSession();
   const [project, setProject] = useState({
     project_name: "",
-    type:"",
+    type: "",
     developer: "",
     support: "",
     status: "Development",
@@ -37,51 +33,36 @@ const InputProject = ({ users, handleSetLoading }) => {
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
   };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
   const handleInput = async (event) => {
     event.preventDefault();
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Uploading new Project",
-    });
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + `/api/projects`,
-      {
-        method: "POST",
-        body: JSON.stringify(project),
+    showNotification("general", "Uploading new Project");
+    await axios
+      .post(process.env.NEXT_PUBLIC_BASE_URL + `/api/projects`, project, {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          showNotification("success", "Success input new project!");
+          router.push(
+            `/projects/${project.project_name + "  " + project.version}`
+          );
+        } else {
+          showNotification("error", "Failed input new project!");
         }
-      }
-    );
-    const message = await response.text();
-    if (response.ok) {
-      setNotification({
-        show: true,
-        type: "success",
-        title: message,
-      });
-      router.push(`/projects/${project.project_name + "  " + project.version}`);
-    } else {
-      setNotification({
-        show: true,
-        type: "error",
-        title: message,
-      });
-    }
+      })
+      .catch((error) => showNotification("error", "Failed input new project!"));
   };
-  useEffect(() => {
-    // If notification is closing, wait for it to close before navigating
-    if (notification.isClosing) {
-      const timeout = setTimeout(() => {
-        setNotification({ ...notification, show: false, isClosing: false });
-        router.push("/projects");
-      }, 3000); // Adjust the timeout to match your notification close animation duration
-
-      return () => clearTimeout(timeout);
-    }
-  }, [notification.isClosing, router]);
   return (
     <>
       {notification.show && (

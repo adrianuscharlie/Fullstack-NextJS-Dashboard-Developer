@@ -1,13 +1,11 @@
 "use client";
 import React from "react";
-import Modal from "react-modal";
-import { useState,useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
+import axios from "axios";
 const AddVersionModal = ({
-  users,
-  isOpen,
   onClose,
   projectName,
   type,
@@ -15,10 +13,11 @@ const AddVersionModal = ({
   projects,
 }) => {
   const { data: session, status } = useSession();
-  const router=useRouter();
+  const router = useRouter();
+  const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({
     project_name: projectName,
-    type:type,
+    type: type,
     notes: "",
     details: details,
     version: "",
@@ -28,11 +27,18 @@ const AddVersionModal = ({
   });
   const [notification, setNotification] = useState({
     show: false,
-    title:'',
-    type: '', // 'success', 'error', 'general'
+    title: "",
+    type: "", // 'success', 'error', 'general'
   });
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
+  };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
   };
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,45 +58,48 @@ const AddVersionModal = ({
     if (!isValid) {
       setNotification({
         show: true,
-        type: 'general',
-        title:'Uploading New Version'
+        type: "general",
+        title: "Uploading New Version",
       });
-      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL+`/api/projects`, {
-        method: "POST",
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        },
-        body: JSON.stringify(formData),
-      });
-      const message=await response.text();
-      if (response.ok) {
-        setNotification({
-          show: true,
-          type: 'success',
-          title:message,
+      await axios
+        .post(process.env.NEXT_PUBLIC_BASE_URL + `/api/projects`, formData, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            showNotification("success", response.data);
+            router.push(
+              "/projects/" + formData.project_name + "  " + formData.version
+            );
+          } else {
+            showNotification("error", response.data);
+          }
         });
-        router.push("/projects/"+formData.project_name+"  "+formData.version)
-      }
     } else {
       setNotification({
         show: true,
-        type: 'error',
-        title:message
+        type: "error",
+        title: "Version not valid",
       });
     }
   };
   useEffect(() => {
-    // If notification is closing, wait for it to close before navigating
-    if (notification.isClosing) {
-      const timeout = setTimeout(() => {
-        setNotification({ ...notification, show: false, isClosing: false });
-        router.push('/projects');
-      }, 3000); // Adjust the timeout to match your notification close animation duration
-
-      return () => clearTimeout(timeout);
-    }
-  }, [notification.isClosing, router]);
+    const fetchUsers = async () => {
+      await axios
+        .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => setUsers(response.data))
+        .catch((error) => console.log(error.message));
+    };
+    fetchUsers();
+  }, [router]);
   return (
     <>
       {notification.show && (
@@ -148,7 +157,6 @@ const AddVersionModal = ({
                       value={formData.type}
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
-                      
                     />
                   </div>
                 </div>
@@ -194,15 +202,15 @@ const AddVersionModal = ({
                       name="support"
                       className="text-base p-2"
                     >
-                      <option value="Hali Wimboko" >
-                        Hali Wimboko
-                      </option>
+                      <option value="Hali Wimboko">Hali Wimboko</option>
                       {users.length !== 0 &&
-                        users.filter(obj => obj["role"] === "support").map((user, index) => (
-                          <option key={index} value={user.namaLengkap}>
-                            {user.namaLengkap}
-                          </option>
-                        ))}
+                        users
+                          .filter((obj) => obj["role"] === "support")
+                          .map((user, index) => (
+                            <option key={index} value={user.namaLengkap}>
+                              {user.namaLengkap}
+                            </option>
+                          ))}
                     </select>
                   </div>
                 </div>

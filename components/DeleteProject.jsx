@@ -1,16 +1,12 @@
 "use client";
 import React from "react";
 import { useState, useEffect } from "react";
-import {
-  useRouter,
-  useSearchParams,
-  usePathname,
-  redirect,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
-const DeleteProject = ({ projects, handleSetLoading }) => {
-  const { data: session, status } = useSession();
+import axios from "axios";
+const DeleteProject = ({ projects }) => {
+  const { data: session } = useSession();
   const router = useRouter();
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
@@ -55,6 +51,13 @@ const DeleteProject = ({ projects, handleSetLoading }) => {
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
   };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
   const handleDelete = async (event) => {
     event.preventDefault();
     const userConfirmed = window.confirm(
@@ -63,48 +66,30 @@ const DeleteProject = ({ projects, handleSetLoading }) => {
     if (userConfirmed) {
       setNotification({
         show: true,
-        type: 'general',
-        title:'Deleting Project'
+        type: "general",
+        title: "Deleting Project",
       });
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL +
-          `/api/projects/${project.project_name + "  " + project.version}`,
-        {
-          method: "DELETE",
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
+      await axios
+        .delete(
+          process.env.NEXT_PUBLIC_BASE_URL +
+            `/api/projects/${project.project_name + "  " + project.version}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
           }
-        }
-      );
-      const { message } = await response.json();
-      if (response.ok) {
-        setNotification({
-          show: true,
-          type: 'success',
-          title:message,
-        });
-        router.push("/projects");
-      }else{
-        setNotification({
-          show: true,
-          type: 'error',
-          title:message
-        });
-      }
+        )
+        .then((response) => {
+          if (response.status === 200) {
+            showNotification("success", response.data.message);
+          } else {
+            showNotification("error", response.data.message);
+          }
+        })
+        .catch((error) => console.log(error));
     }
   };
-  useEffect(() => {
-    // If notification is closing, wait for it to close before navigating
-    if (notification.isClosing) {
-      const timeout = setTimeout(() => {
-        setNotification({ ...notification, show: false, isClosing: false });
-        router.push('/projects');
-      }, 3000); // Adjust the timeout to match your notification close animation duration
-
-      return () => clearTimeout(timeout);
-    }
-  }, [notification.isClosing, router]);
   return (
     <>
       {notification.show && (

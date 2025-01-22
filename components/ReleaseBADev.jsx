@@ -1,15 +1,16 @@
 "use client";
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import BADevDoc from "./BADevDoc";
-import { BlobProvider,PDFViewer } from "@react-pdf/renderer";
+import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
 import DatePicker from "react-datepicker";
-import { XIcon,PlusCircle } from "lucide-react";
+import { XIcon, PlusCircle } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 
 const ReleaseBADev = ({ projects, users }) => {
-  const {data:session,status}=useSession();
+  const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
   const [attachments, setAttachments] = useState([
     { title: "", description: "", images: [], hasil: "Sesuai" },
@@ -32,7 +33,7 @@ const ReleaseBADev = ({ projects, users }) => {
     businessAnalyst: "",
     tglAwal: "",
     tglAkhir: "",
-    kategori:""
+    kategori: "",
   });
 
   const handleSelectedProject = (e) => {
@@ -79,19 +80,20 @@ const ReleaseBADev = ({ projects, users }) => {
     }));
   };
   const handleNoDokumen = async (e) => {
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+    await axios
+      .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen", {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        }
-      }
-    );
-    const docomentNumber = await response.text();
-    setFormData((prevData) => ({
-      ...prevData,
-      ["noDokumen"]: docomentNumber,
-    }));
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
+      })
+      .then((response) => {
+        setFormData((prevData) => ({
+          ...prevData,
+          ["noDokumen"]: response.data,
+        }));
+      })
+      .catch((error) => console.log(error.message));
   };
 
   const handleSubmit = async (e) => {
@@ -209,7 +211,7 @@ const ReleaseBADev = ({ projects, users }) => {
             </div>
             {formData.version !== "" && (
               <>
-              <div className="p-4">
+                <div className="p-4">
                   <label htmlFor="dropdown">No Dokumen</label>
                 </div>
                 <div className="p-4 flex items-start gap-10">
@@ -339,32 +341,27 @@ const ReleaseBADev = ({ projects, users }) => {
                   </div>
                 </div>
                 <div className="p-4">
-              <label htmlFor="dropdown">Kategori Pengembangan/Perubahan</label>
-            </div>
-            <div className="p-4">
-              <div>
-                <select
-                  onChange={handleChange}
-                  value={formData.kategori || ""}
-                  name="kategori"
-                  className="text-base p-2 bg-gray-100"
-                >
-                  <option value="" disabled >
-                    Select an option 
-                  </option>
-                  <option value="Low" >
-                    Low 
-                  </option>
-                  <option value="Medium" >
-                    Medium
-                  </option>
-                  <option value="High" >
-                    High
-                  </option>
-                  
-                </select>
-              </div>
-            </div>
+                  <label htmlFor="dropdown">
+                    Kategori Pengembangan/Perubahan
+                  </label>
+                </div>
+                <div className="p-4">
+                  <div>
+                    <select
+                      onChange={handleChange}
+                      value={formData.kategori || ""}
+                      name="kategori"
+                      className="text-base p-2 bg-gray-100"
+                    >
+                      <option value="" disabled>
+                        Select an option
+                      </option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="p-4">
                   <label htmlFor="dropdown">Partner</label>
                 </div>
@@ -416,7 +413,7 @@ const ReleaseBADev = ({ projects, users }) => {
                     />
                   </div>
                 </div>
-                
+
                 <div className=" p-4">
                   <label htmlFor="dropdown">Message</label>
                 </div>
@@ -432,7 +429,7 @@ const ReleaseBADev = ({ projects, users }) => {
                     onChange={handleChange}
                   />
                 </div>
-                
+
                 <div className="p-4">Attachment Form</div>
                 <div className="">
                   <div className="mx-auto p-6">

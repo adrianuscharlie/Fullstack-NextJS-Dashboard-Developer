@@ -11,8 +11,9 @@ import {
   Loader,
   MessageSquareCode,
 } from "lucide-react";
+import axios from "axios";
 
-const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
+const CommentSection = ({ project, handleSetLoading }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
@@ -49,10 +50,17 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
   };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
   useEffect(() => {
     const fetchComment = async () => {
-      try {
-        const result = await fetch(
+      await axios
+        .get(
           process.env.NEXT_PUBLIC_BASE_URL +
             `/api/projects/${
               project.project_name + "  " + project.version
@@ -63,27 +71,37 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
               "Content-Type": "application/json", // Optional: set content type if needed
             },
           }
+        )
+        .then((response) => {
+          setComments(response.data);
+          setIsOpen(true);
+        })
+        .catch((error) =>
+          console.log("Error fetching comments:", error.message)
         );
-        if (result.ok) {
-          const data = await result.json();
-          setComments(data);
-        }
-      } catch (error) {
-        console.error("Error fetching comments:", error.message);
-      } finally {
-        setLoadingComments(false);
-      }
+      setLoadingComments(false);
+      setIsOpen(true);
     };
     fetchComment();
-    // If notification is closing, wait for it to close before navigating
-    if (notification.isClosing) {
-      const timeout = setTimeout(() => {
-        setNotification({ ...notification, show: false, isClosing: false });
-      }, 3000); // Adjust the timeout to match your notification close animation duration
-
-      return () => clearTimeout(timeout);
-    }
   }, []);
+
+  const resetState = () => {
+    setText("");
+    setSelectedFiles([]);
+    setIsOpen(false);
+    setCcText("");
+    setEmailCC(
+      new Set([
+        "handika_sp@indomaret.co.id",
+        "bima_ans@indomaret.co.id",
+        "hali.wimboko@indomaret.co.id",
+        session.user.email,
+      ])
+    );
+    setSelectedOption(null);
+    setChecked(false);
+    setEditTogle(null);
+  };
 
   const handleSubmitComment = async (event) => {
     event.preventDefault();
@@ -98,53 +116,44 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
     };
 
     const isEditing = editTogle !== null;
-    const method = isEditing ? "PUT" : "POST";
+    const method = isEditing ? "put" : "post";
     const actionTitle = isEditing
       ? `Editing Comment with ID: ${editTogle}`
       : "Uploading New Comment";
 
-    setNotification({
-      show: true,
-      type: "general",
-      title: actionTitle,
-    });
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${
+    showNotification("general", actionTitle);
+    await axios({
+      method: method,
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${
         project.project_name + "  " + project.version
       }/comments`,
-      {
-        method,
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          "Content-Type": "application/json", // Optional: set content type if needed
-        },
-        body: JSON.stringify(commentObject),
-      }
-    );
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify(commentObject), // Use 'data' instead of 'body' for axios
+    })
+      .then((response) => {
+        console.log(response);
+        if (response.status === 200) {
+          showNotification("success", "response.data.message");
+          commentObject.id = response.data.id;
+          commentObject.date = response.data.date;
+          commentObject.folder = project.project_name;
+        } else {
+          showNotification(
+            "error",
+            response.message || "Failed to submit comment"
+          );
+          return;
+        }
+        handleSetLoading(false);
+      })
+      .catch((error) => console.log(error.message));
 
-    const result = await response.json();
-    if (!response.ok) {
-      setNotification({
-        show: true,
-        type: "error",
-        title: result.message || "Failed to submit comment",
-      });
-      handleSetLoading(false);
-      return;
-    }
-
-    // Update the comment with ID and Date received from the response
-    commentObject.id = result.id;
-    commentObject.date = result.date;
-    commentObject.folder = project.project_name;
     // Handle file uploads if any files are selected
     if (selectedFiles.length > 0) {
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Uploading file into server...",
-      });
+      showNotification("general", "Uploading file into server...");
 
       const formData = new FormData();
       formData.append("header", JSON.stringify(commentObject));
@@ -152,126 +161,120 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
         formData.append(`file_${commentObject.id}_${index + 1}`, file);
       });
 
-      const fileUploadResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/files`,
-        {
-          method: "POST",
-          body: formData,
+      await axios
+        .post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files`, formData, {
           headers: {
             Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
           },
-        }
-      );
-
-      const uploadMessage = await fileUploadResponse.text();
-      setNotification({
-        show: true,
-        type: fileUploadResponse.ok ? "success" : "error",
-        title: uploadMessage,
-      });
+        })
+        .then((response) => {
+          showNotification(
+            response.status === 200 ? "success" : "error",
+            "Success saving files into Server!"
+          );
+        })
+        .catch((error) => alert(error.message));
     }
 
     if (isChecked) {
-      // Send email notifications if needed
-      const emailResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            "Content-Type": "application/json", // Optional: set content type if needed
-          },
-        }
-      );
+      await axios
+        .get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
+          }
+        )
+        .then(async (response) => {
+          const { emailDeveloper, emailSupport } = response.data;
+          let emailFrom = session.user.email;
+          let emailRecipient = emailDeveloper;
 
-      const { emailDeveloper, emailSupport } = await emailResponse.json();
-      let emailFrom = session.user.email;
-      let emailRecipient = emailDeveloper;
+          if (emailFrom === emailDeveloper) {
+            emailRecipient = emailSupport;
+          } else if (emailFrom === emailSupport) {
+            emailRecipient = emailDeveloper;
+          } else {
+            emailRecipient += `;${emailSupport}`;
+          }
+          showNotification(
+            "general",
+            "Sending email notification, please wait..."
+          );
+          const emailObject = {
+            subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
+            body: text,
+            from: emailFrom,
+            to: emailRecipient,
+            cc: [...emailCC].join(";"),
+          };
 
-      if (emailFrom === emailDeveloper) {
-        emailRecipient = emailSupport;
-      } else if (emailFrom === emailSupport) {
-        emailRecipient = emailDeveloper;
-      } else {
-        emailRecipient += `;${emailSupport}`;
-      }
-
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Sending email notification, please wait...",
-      });
-
-      const emailObject = {
-        subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
-        body: text,
-        from: emailFrom,
-        to: emailRecipient,
-        cc: [...emailCC].join(";"),
-      };
-
-      const emailFormData = new FormData();
-      emailFormData.append("email", JSON.stringify(emailObject));
-      selectedFiles.forEach((file, index) => {
-        emailFormData.append(`file_${index + 1}`, file);
-      });
-
-      const sendEmail = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-        {
-          method: "POST",
-          body: emailFormData,
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          },
-        }
-      );
-
-      const emailMessage = await sendEmail.text();
-      if (!sendEmail.ok) {
-        for (let i = 0; i < 3; i++) {
-          setNotification({
-            show: true,
-            type: "general",
-            title: "Resending Email...",
+          const emailFormData = new FormData();
+          emailFormData.append("email", JSON.stringify(emailObject));
+          selectedFiles.forEach((file, index) => {
+            emailFormData.append(`file_${index + 1}`, file);
           });
 
-          const resendEmail = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-            {
-              method: "POST",
-              body: emailFormData,
-              headers: {
-                Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-              },
+          await axios
+            .post(
+              `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+              emailFormData,
+              {
+                headers: {
+                  Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                },
+              }
+            )
+            .then(async (response) => {
+              if (!response.status === 200) {
+                for (let i = 0; i < 3; i++) {
+                  showNotification("general", "Resending email...");
+                  const response = axios.post(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+                    emailFormData,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                      },
+                    }
+                  );
+                  if (response.status === 200) {
+                    showNotification("success", "Success sending email!");
+                    break;
+                  } else {
+                    showNotification("error", "Failed sending email!");
+                  }
+                }
+              } else {
+                showNotification("success", "Success sending email!");
+              }
+            });
+        })
+        .catch((error) => {
+          for (let i = 0; i < 3; i++) {
+            showNotification("general", "Resending email...");
+            const response = axios.post(
+              `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
+              emailFormData,
+              {
+                headers: {
+                  Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                },
+              }
+            );
+            if (response.status === 200) {
+              showNotification("success", "Success sending email!");
+              break;
+            } else {
+              showNotification("error", "Failed sending email!");
             }
-          );
-
-          const resendMessage = await resendEmail.text();
-          if (resendEmail.ok) {
-            setNotification({
-              show: true,
-              type: "success",
-              title: resendMessage,
-            });
-            break;
-          } else {
-            setNotification({
-              show: true,
-              type: "error",
-              title: resendMessage,
-            });
           }
-        }
-      } else {
-        setNotification({
-          show: true,
-          type: "success",
-          title: emailMessage,
         });
-      }
-    }
 
-    // Update UI and clear form
+      // Update UI and clear form
+    }
     setComments((prevItems) => {
       if (editTogle === null) {
         // Adding a new comment
@@ -283,20 +286,9 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
         );
       }
     });
-    setText("");
-    setSelectedFiles([]);
-    setIsOpen(false);
-    setCcText("");
-    setEmailCC(
-      new Set([
-        "handika_sp@indomaret.co.id",
-        "bima_ans@indomaret.co.id",
-        "hali.wimboko@indomaret.co.id",
-        session.user.email,
-      ])
-    );
-    setSelectedOption(null);
-    handleSetLoading(false);
+
+    resetState();
+    setIsOpen(true);
   };
 
   const handleFileChange = (event) => {
@@ -329,34 +321,22 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
       const check = confirm("Are you sure want to delete this file?");
       if (check) {
         const filePath = encodeURIComponent(fileObject.filePath);
-        setNotification({
-          show: true,
-          type: "general",
-          title: "Deleting file in server",
-        });
-        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
-        const response = await fetch(url, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            "Content-Type": "application/json", // Optional: set content type if needed
-          },
-        });
-        const message = await response.text();
-        if (response.ok) {
-          setNotification({
-            show: true,
-            type: "success",
-            title: message,
-          });
-          setEditTogle(null);
-        } else {
-          setNotification({
-            show: true,
-            type: "error",
-            title: message,
-          });
-        }
+        showNotification("general", "Deleting file in server");
+        await axios
+          .delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`, {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+              "Content-Type": "application/json", // Optional: set content type if needed
+            },
+          })
+          .then((response) => {
+            if (response.status === 200) {
+              showNotification("success", response.data.message);
+            } else {
+              showNotification("error", response.data.message);
+            }
+          })
+          .catch((error) => console.log(error.message));
       }
     }
   };
@@ -382,45 +362,34 @@ const CommentSection = ({ project, handleStatus, handleSetLoading }) => {
     } else {
       const confirm = window.confirm("Are you sure?");
       if (confirm) {
-        const response = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL +
-            `/api/projects/${
-              project.project_name + "  " + project.version + "/comments/" + id
-            }`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-              "Content-Type": "application/json", // Optional: set content type if needed
-            },
-          }
-        );
-        const { message } = await response.json();
-        if (response.ok) {
-          setComments((prevItems) =>
-            prevItems.filter((item) => item.id !== id)
-          );
-          setNotification({
-            show: true,
-            type: "success",
-            title: message,
-          });
-        }
+        await axios
+          .delete(
+            process.env.NEXT_PUBLIC_BASE_URL +
+              `/api/projects/${
+                project.project_name +
+                "  " +
+                project.version +
+                "/comments/" +
+                id
+              }`,
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                "Content-Type": "application/json", // Optional: set content type if needed
+              },
+            }
+          )
+          .then((response) => {
+            if (response.status === 200) {
+              setComments((prevItems) =>
+                prevItems.filter((item) => item.id !== id)
+              );
+              showNotification("success", response.data.message);
+            }
+          })
+          .catch((error) => console.log(error.message));
       }
-      setText("");
-      setSelectedFiles([]);
-      setIsOpen(false);
-      setCcText("");
-      setEmailCC(
-        new new Set([
-          "handika_sp@indomaret.co.id",
-          "bima_ans@indomaret.co.id",
-          "hali.wimboko@indomaret.co.id",
-          session.user.email,
-        ])()
-      );
-      setSelectedOption(null);
-      handleSetLoading(false);
+      resetState();
     }
   };
 

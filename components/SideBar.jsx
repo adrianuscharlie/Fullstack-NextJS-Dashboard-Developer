@@ -19,9 +19,9 @@ const Sidebar = () => {
     };
     setUpProviders();
   }, []);
-  const handleSignOut =  () => {
-    signOut({redirect:false});
-    router.push("/login");
+  const handleSignOut = async () => {
+    await signOut({redirect:false}).then(()=>router.push("/login"))
+    
   };
 
   return session? (
@@ -60,9 +60,9 @@ const Sidebar = () => {
           <Link href={"/ba"} className="">
             Create BA
           </Link>
-          <Link href={"/email"} className="">
+          {/* <Link href={"/email"} className="">
             Send Email
-          </Link>
+          </Link> */}
           <Link href={"/configuration"} className="">
             Configuration
           </Link>
@@ -111,7 +111,7 @@ const Sidebar = () => {
                   Create BA
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   className="hover:text-sky-500 text-white flex justify-start items-center gap-3"
                   href={"/email"}
@@ -119,7 +119,7 @@ const Sidebar = () => {
                   <MailPlus/>
                   Send Email
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   className="hover:text-sky-500 text-white flex justify-start items-center gap-3"

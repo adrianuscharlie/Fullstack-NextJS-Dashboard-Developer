@@ -3,10 +3,11 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
+import axios from "axios";
 const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
   const [formData, setFormData] = useState({
     project_name: project.project_name,
-    type:project.type,
+    type: project.type,
     notes: project.notes,
     details: project.details,
     version: project.version,
@@ -14,7 +15,7 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     support: project.support,
     status: project.status,
   });
-  const {data:session,status}=useSession();
+  const { data: session, status } = useSession();
   const [options, setOptions] = useState([
     "Development",
     "Bugs",
@@ -33,6 +34,13 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
   const closeNotification = () => {
     setNotification({ ...notification, show: false });
   };
+
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -41,73 +49,49 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
     }));
   };
   const [users, setUsers] = useState([]);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const handleSelectChange = (e) => {
-    const selectedOption = e.target.value;
-    setSelectedOption(selectedOption);
-  };
   useEffect(() => {
     const fetchUsers = async () => {
-      const userResponse = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL + "/api/user"
-      ,{
-        headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        }
-      });
-      const data = await userResponse.json();
-      setUsers(data);
+      await axios
+        .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => setUsers(response.data))
+        .catch((error) => console.log(error.message));
     };
     fetchUsers();
   }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Editing Project",
-    });
-    const response = await fetch(
+    showNotification("general","Editing project....")
+
+    await axios.put(
       process.env.NEXT_PUBLIC_BASE_URL +
         `/api/projects/${project.project_name}  ${project.version}`,
+        formData,
       {
-        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
         },
-        body: JSON.stringify(formData),
       }
-    );
-    const message=await response.text();
-    if (response.ok) {
-      setNotification({
-        show: true,
-        type: "success",
-        title: message,
-      });
-      handleSubmit(formData);
-    } else {
-      setNotification({
-        show: true,
-        type: "error",
-        title: message,
-      });
-    }
-    onClose();
-  };
-  useEffect(() => {
-    // If notification is closing, wait for it to close before navigating
-    if (notification.isClosing) {
-      const timeout = setTimeout(() => {
-        setNotification({ ...notification, show: false, isClosing: false });
-      }, 3000); // Adjust the timeout to match your notification close animation duration
+    ).then((response)=>{
+      if(response.status===200){
+        showNotification("success",response.data)
+        handleSubmit(formData);
+        onClose();
+      }
+      else {
+        showNotification("error",response.data)
+        onClose();
+      }
+      
+    })
 
-      return () => clearTimeout(timeout);
-    }
-  }, [notification]);
+  };
   return (
     <>
       {notification.show && (
@@ -165,7 +149,6 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
                       value={formData.type}
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
-                      
                     />
                   </div>
                 </div>
@@ -231,7 +214,7 @@ const UpdateProjectModal = ({ isOpen, onClose, handleSubmit, project }) => {
                   <select
                     id="dropdown"
                     onChange={handleChange}
-                    value={formData['status'] || ""}
+                    value={formData["status"] || ""}
                     name="status"
                     className="text-base p-2 bg-gray-100 rounded-sm"
                     required

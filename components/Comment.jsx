@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { File, Pencil, User2, Day, Trash2 } from "lucide-react";
 import Notification from "./Notification";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 const CommentCard = ({ data, onAction }) => {
   const { data: session, status } = useSession();
   const [comment, setComment] = useState(data);
@@ -13,13 +14,10 @@ const CommentCard = ({ data, onAction }) => {
     title: "",
     type: "", // 'success', 'error', 'general'
   });
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
   useEffect(() => {
     const fetchFile = async () => {
-      try {
-        const response = await fetch(
+      await axios
+        .get(
           process.env.NEXT_PUBLIC_BASE_URL +
             `/api/files/comments/${comment.id}`,
           {
@@ -27,16 +25,12 @@ const CommentCard = ({ data, onAction }) => {
               Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
             },
           }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setFiles(data);
-        }
-      } catch (error) {
-        // console.error("Error fetching files:", error.message);
-      } finally {
-        setLoadingFiles(false);
-      }
+        )
+        .then((response) => {
+          setFiles(response.data);
+        })
+        .catch((error) => console.error("No files for comment"));
+      setLoadingFiles(false);
     };
     fetchFile();
     const datetime = new Date(comment.date);
@@ -59,49 +53,46 @@ const CommentCard = ({ data, onAction }) => {
       file.project_name +
       "_" +
       file.version;
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Downloading File :" + file.fileName + " .....",
-    });
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`,
-      {
+    showNotification(
+      "general",
+      "Downloading File :" + file.fileName + " ....."
+    );
+    await axios
+      .get(process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`, {
         headers: {
           Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
           "Content-Type": "application/json", // Optional: set content type if needed
         },
-      }
-    );
-    if (response.ok) {
-      const blob = await response.blob();
-      // Create a blob URL for the file content
-      const url = window.URL.createObjectURL(blob);
+      })
+      .then(async (response) => {
+        if (response.status === 200) {
+          const blob = await response.blob();
+          // Create a blob URL for the file content
+          const url = window.URL.createObjectURL(blob);
 
-      // Create a temporary link element
-      const link = document.createElement("a");
-      link.href = url;
+          // Create a temporary link element
+          const link = document.createElement("a");
+          link.href = url;
 
-      // Set the download attribute with the desired filename
-      link.download = file.fileName;
+          // Set the download attribute with the desired filename
+          link.download = file.fileName;
 
-      // Programmatically trigger the click event
-      link.click();
+          // Programmatically trigger the click event
+          link.click();
 
-      // Clean up by revoking the blob URL
-      window.URL.revokeObjectURL(url);
-      setNotification({
-        show: true,
-        type: "success",
-        title: "Success downloading File :" + file.fileName,
+          // Clean up by revoking the blob URL
+          window.URL.revokeObjectURL(url);
+          showNotification(
+            "success",
+            "Success downloading File :" + file.fileName
+          );
+        } else {
+          showNotification(
+            "error",
+            "Failed Downloading File :" + file.fileName
+          );
+        }
       });
-    } else {
-      setNotification({
-        show: true,
-        type: "error",
-        title: "Failed Downloading File :" + file.fileName,
-      });
-    }
   };
 
   const handleFileRemove = async (index) => {
@@ -117,31 +108,32 @@ const CommentCard = ({ data, onAction }) => {
         type: "general",
         title: "Deleting file in server",
       });
-      const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`;
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          "Content-Type": "application/json", // Optional: set content type if needed
-        },
-      });
-      const message = await response.text();
-      if (response.ok) {
-        setNotification({
-          show: true,
-          type: "success",
-          title: message,
+      await axios
+        .delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            showNotification("success", "Success deleting file in server!");
+          } else {
+            showNotification("Failed deleting file in server!");
+          }
         });
-      } else {
-        setNotification({
-          show: true,
-          type: "error",
-          title: message,
-        });
-      }
     }
   };
+  const closeNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
 
+  const showNotification = async (type, title) => {
+    setNotification({ show: true, type, title });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
   return (
     <>
       {notification.show && (

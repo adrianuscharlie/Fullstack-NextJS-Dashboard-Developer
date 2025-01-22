@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@react-pdf/renderer": "^3.4.0",
-    "axios": "^1.7.5",
+    "axios": "^1.7.9",
     "dotenv": "^16.4.5",
     "fs": "^0.0.1-security",
     "jspdf": "^2.5.1",

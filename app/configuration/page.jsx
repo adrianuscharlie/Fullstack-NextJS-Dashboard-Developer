@@ -33,9 +33,6 @@ const Configuration = () => {
     setSelectedOption(selectedOption);
   };
 
-  const handleSetLoading=(value)=>{
-    setLoading(value)
-  }
   return (
     <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
       <h1 className="text-start text-4xl font-semibold mt-14 text-sky-500">
@@ -66,10 +63,10 @@ const Configuration = () => {
         </div>
       </div>
       {selectedOption==="Edit Profile"&&(
-        <EditProfile user={session.user} handleSetLoading={handleSetLoading}/>
+        <EditProfile user={session.user} />
       )}
       {selectedOption==="Change Password"&&(
-        <ChangePassword user={session.user} handleSetLoading={handleSetLoading}/>
+        <ChangePassword user={session.user} />
       )}
     </section>
   );

@@ -1,63 +1,59 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 import Loading from "@/components/Loading";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AdminPage from "@/components/AdminPage";
 import DashboardPage from "@/components/DashboardPage";
+import axios from "axios";
 
 const Home = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (status === "loading") return; // Don't do anything while session is loading
+    if (status === "loading") return;
 
     if (!session) {
       router.push("/login");
+      return;
     }
-    const fetchSession = async () => {
-      if (!session) {
-        router.push("/login");
-        return;
-      }
 
+    const fetchProjects = async () => {
+      setLoading(true);
       const user = session.user;
       const url =
         user.role.includes("manager") || user.role.includes("ba_dev")
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects`
           : `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/user/${user.namaLengkap}`;
 
-      try {
-        const response = await fetch(url, {
+      await axios
+        .get(url, {
           headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
-          }
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const data = await response.json();
-        setProjects(data);
-      } catch (error) {
-        console.error("Error fetching user data:", error.message);
-        setProjects([]); // Handle the error case
-      } finally {
-        setLoading(false);
-      }
+            Authorization: `Bearer ${session.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          setProjects(response.data);
+          setLoading(false);
+        })
+        .catch((error) =>
+          console.log("Error fetching user data:" + error.message)
+        );
     };
 
-    fetchSession();
-  }, [session,router]);
+    fetchProjects();
+  }, [session, status, router]);
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return <Loading />;
   }
 
-  if (!session) {
-    router.push("/login");
+  if (!session || !session.user) {
+    return <p>Loading...</p>; // Or redirect to login, or show a fallback UI
   }
 
   return (

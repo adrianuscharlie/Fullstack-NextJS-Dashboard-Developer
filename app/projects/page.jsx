@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import ProjectsTable from "@/components/Projects";
 import Loading from "@/components/Loading";
-import { redirect, useRouter } from "next/navigation";
-import { useSession, getSession } from "next-auth/react";
+import {  useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Accordion from "@/components/Accordion";
+import axios from "axios";
 
 const Projects = () => {
   const { data: session, status } = useSession();
@@ -15,7 +15,6 @@ const Projects = () => {
   const [searchResult, setSearchResult] = useState({});
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [keyword, setKeyword] = useState("");
-  const [users, setUsers] = useState([]);
   const [projectCatalog, setProjectCatalog] = useState([]);
   const [filteredProject,setFilteredProject]=useState([])
   const [listFilters,setListFilters]=useState({})
@@ -28,11 +27,9 @@ const Projects = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
   
-    // Update the filters state
     setFilters((prev) => {
       const updatedFilters = { ...prev, [name]: value };
   
-      // Apply filtering immediately after updating the state
       const filteredProjects = projectCatalog.filter((project) => {
         return (
           (updatedFilters.type === "" || project["type"] === updatedFilters.type) &&
@@ -48,14 +45,9 @@ const Projects = () => {
     });
   };
   
-
-
-
-
-  // Filter the projects based on filters
   
   useEffect(() => {
-    if (status === "loading") return; // Don't do anything while session is loading
+    if (status === "loading") return; 
 
     if (!session) {
       router.push("/login");
@@ -63,64 +55,35 @@ const Projects = () => {
     }
 
     const fetchProjects = async () => {
-      try {
-        const result = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + "/api/projects",
-          {
-            headers: {
-              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-              "Content-Type": "application/json", // Optional: set content type if needed
-            },
-          }
-        );
-        if (!result.ok) {
-          throw new Error("Failed to fetch projects");
-        }
-        const data = await result.json();
-        const orderedData = groupProjectsByProjectName(data);
+      await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/projects",{headers:{
+        Authorization: `Bearer ${session.accessToken}`,
+        "Content-Type": "application/json",
+      }}).then((response)=>{
+        const orderedData=groupProjectsByProjectName(response.data);
         var catalogFinal = [];
-        Object.entries(orderedData).forEach(([key, value]) => {
-          catalogFinal.push(value[0]);
-        });
-        var dataFinal = {};
-        Object.entries(orderedData).forEach(([key, value]) => {
-          dataFinal[key] = {
-            isOpen: false,
-            title: key,
-            projects: value,
-          };
-        });
+      Object.entries(orderedData).forEach(([key, value]) => {
+        catalogFinal.push(value[0]);
+      });
+      var dataFinal = {};
+      Object.entries(orderedData).forEach(([key, value]) => {
+        dataFinal[key] = {
+          isOpen: false,
+          title: key,
+          projects: value,
+        };
+      })
 
-        const filters=getFilter(catalogFinal)
-        setProjectCatalog(catalogFinal);
-        setFilteredProject(catalogFinal)
-        setProjects(dataFinal);
-        setSearchResult(dataFinal);
-        setListFilters(filters)
-        console.log(filters)
-      } catch (error) {
-        console.error("Error fetching projects:", error.message);
-      } finally {
-        setLoadingProjects(false);
-      }
+      const filters=getFilter(catalogFinal)
+      setProjectCatalog(catalogFinal);
+      setFilteredProject(catalogFinal)
+      setProjects(dataFinal);
+      setSearchResult(dataFinal);
+      setListFilters(filters)
+      }).catch((error)=>console.log(error.message));
+      setLoadingProjects(false)
     };
-    const fetchUsers = async () => {
-      const userResponse = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL + "/api/user",
-        {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            "Content-Type": "application/json", // Optional: set content type if needed
-          },
-        }
-      );
-      const data = await userResponse.json();
-      setUsers(data);
-    };
-    
     fetchProjects();
-    fetchUsers();
-  }, [session, router,]);
+  }, [session, router,status]);
 
   if (loadingProjects) {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator
@@ -256,7 +219,6 @@ const Projects = () => {
                     key={key}
                     title={value.title}
                     projects={value.projects}
-                    users={users}
                     isOpen={value.isOpen}
                     toggleAccordion={() => toggleAccordion(key)}
                   />

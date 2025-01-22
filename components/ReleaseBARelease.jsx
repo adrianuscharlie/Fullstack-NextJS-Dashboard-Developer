@@ -6,7 +6,7 @@ import BAUATDoc from "./BAUATDoc";
 import BAReleaseDoc from "./BAReleaseDoc";
 import { useSession } from "next-auth/react";
 const ReleaseBaRelease = ({ projects }) => {
-  const {data:session,status}=useSession()
+  const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
   const [formData, setFormData] = useState({
     noDokumen: "",
@@ -60,19 +60,20 @@ const ReleaseBaRelease = ({ projects }) => {
     }));
   };
   const handleNoDokumen = async (e) => {
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen",{
+    await axios
+      .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/dokumen", {
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          'Content-Type': 'application/json', // Optional: set content type if needed
-        }
-      }
-    );
-    const docomentNumber = await response.text();
-    setFormData((prevData) => ({
-      ...prevData,
-      ["noDokumen"]: docomentNumber,
-    }));
+          Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+          "Content-Type": "application/json", // Optional: set content type if needed
+        },
+      })
+      .then((response) => {
+        setFormData((prevData) => ({
+          ...prevData,
+          ["noDokumen"]: response.data,
+        }));
+      })
+      .catch((error) => console.log(error.message));
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -159,7 +160,7 @@ const ReleaseBaRelease = ({ projects }) => {
             </div>
             {formData.version !== "" && (
               <>
-              <div className="p-4">
+                <div className="p-4">
                   <label htmlFor="dropdown">No Dokumen</label>
                 </div>
                 <div className="p-4 flex items-start gap-10">
