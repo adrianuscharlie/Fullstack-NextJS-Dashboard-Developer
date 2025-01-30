@@ -80,10 +80,8 @@ const ReleaseBAUAT = ({ projects, users }) => {
     const month = currentDate.getMonth() + 1; // Returns the month (0-11), add 1 to get the correct month (1-12)
     const year = currentDate.getFullYear(); // Returns the full year (e.g., 2023)
     const formatedDate = currentDate.toLocaleDateString("en-GB");
-    const documentNumber = `${day}/KIS/${month}/${year}`;
     setFormData((prevData) => ({
       ...prevData,
-      ["noDokumen"]: documentNumber,
       ["date"]: formatedDate,
     }));
   };
@@ -96,10 +94,8 @@ const ReleaseBAUAT = ({ projects, users }) => {
     const month = currentDate.getMonth() + 1; // Returns the month (0-11), add 1 to get the correct month (1-12)
     const year = currentDate.getFullYear(); // Returns the full year (e.g., 2023)
     const formatedDate = currentDate.toLocaleDateString("en-GB");
-    const documentNumber = `${day}/KIS/${month}/${year}`;
     setFormData((prevData) => ({
       ...prevData,
-      ["noDokumen"]: documentNumber,
       ["date"]: formatedDate,
       ["support"]: formData.support,
     }));

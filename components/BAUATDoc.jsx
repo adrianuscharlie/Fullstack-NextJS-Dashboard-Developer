@@ -101,8 +101,7 @@ function formatDate(inputDate) {
   return date.toLocaleDateString("id-ID", options);
 }
 const BAUATDoc = ({ formData }) => {
-  const ttd =
-    formData.ttd.split("\n").length > 2 ? formData.ttd.split("\n") : [];
+  const ttd =formData.ttd.split("\n").length > 1 ? formData.ttd.split("\n") : [];
   return (
     <Document
       style={{ width: "100%", height: "100%" }}

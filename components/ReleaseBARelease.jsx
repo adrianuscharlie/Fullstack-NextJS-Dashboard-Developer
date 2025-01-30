@@ -1,10 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import ReactDOM from "react-dom";
 import { BlobProvider, PDFViewer } from "@react-pdf/renderer";
-import BAUATDoc from "./BAUATDoc";
 import BAReleaseDoc from "./BAReleaseDoc";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 const ReleaseBaRelease = ({ projects }) => {
   const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
@@ -52,10 +51,8 @@ const ReleaseBaRelease = ({ projects }) => {
     const month = currentDate.getMonth() + 1; // Returns the month (0-11), add 1 to get the correct month (1-12)
     const year = currentDate.getFullYear(); // Returns the full year (e.g., 2023)
     const formatedDate = currentDate.toLocaleDateString("en-GB");
-    const documentNumber = `${day}/KIS/${month}/${year}`;
     setFormData((prevData) => ({
       ...prevData,
-      ["noDokumen"]: documentNumber,
       ["date"]: formatedDate,
     }));
   };
@@ -84,10 +81,8 @@ const ReleaseBaRelease = ({ projects }) => {
     const month = currentDate.getMonth() + 1; // Returns the month (0-11), add 1 to get the correct month (1-12)
     const year = currentDate.getFullYear(); // Returns the full year (e.g., 2023)
     const formatedDate = currentDate.toLocaleDateString("en-GB");
-    const documentNumber = `${day}/KIS/${month}/${year}`;
     setFormData((prevData) => ({
       ...prevData,
-      ["noDokumen"]: documentNumber,
       ["date"]: formatedDate,
     }));
   };
