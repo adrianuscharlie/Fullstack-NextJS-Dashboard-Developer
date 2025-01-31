@@ -34,8 +34,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Ignore .env files
-.env
+
 
 # Ignore appsettings files
 appsettings.Development.json
