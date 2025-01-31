@@ -277,7 +277,7 @@ const CommentModal = ({ id, onAction }) => {
   ) : (
     <>
       <button
-        class="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
+        className="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
         onClick={handleModalOpen}
       >
         <Pencil />

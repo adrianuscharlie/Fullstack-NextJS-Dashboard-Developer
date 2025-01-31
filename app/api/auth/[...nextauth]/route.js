@@ -12,8 +12,6 @@ const handler = NextAuth({
       },
       authorize: async (credentials) => {
         const url = `${process.env.NEXTAUTH_URL_INTERNAL}/auth/login`;
-        console.log(url, credentials);
-
         try {
           const response = await axios.post(
             url,
@@ -30,7 +28,6 @@ const handler = NextAuth({
           );
 
           const data = response.data;
-          console.log(data);
 
           // Check if the response data includes the expected properties
           const { token, user } = data;

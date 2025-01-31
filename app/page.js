@@ -46,14 +46,15 @@ const Home = () => {
     };
 
     fetchProjects();
-  }, [session, status, router]);
+  }, [session?.user?.role, status]);
 
   if (status === "loading" || loading) {
     return <Loading />;
   }
 
   if (!session || !session.user) {
-    return <p>Loading...</p>; // Or redirect to login, or show a fallback UI
+    router.push("/login");
+    return null;
   }
 
   return (

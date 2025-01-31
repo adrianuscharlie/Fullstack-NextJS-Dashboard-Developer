@@ -9,7 +9,9 @@ import { Pencil } from "lucide-react";
 import axios from "axios";
 const Project = () => {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession({
+    refetchOnWindowFocus: false,
+  });
   const pathname = usePathname();
   const [project, setProject] = useState({});
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -20,6 +22,7 @@ const Project = () => {
 
     if (!session) {
       router.push("/login");
+      return;
     }
     const split = pathname.split("/");
     const id = split[2];
@@ -38,7 +41,7 @@ const Project = () => {
       setLoadingProjects(false);
     };
     fetchProject();
-  }, [session, router,pathname,status]);
+  }, [session?.user?.role, status]);
 
 
 
@@ -61,6 +64,11 @@ const Project = () => {
     return <Loading />;
   }
 
+  if (!session || !session.user) {
+    router.push("/login");
+    return null;
+  }
+
   return project ? (
     <>
       <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
@@ -69,7 +77,7 @@ const Project = () => {
             {project.project_name}
           </h1>
           <button
-            class="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
+            className="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
             onClick={handleModalOpen}
           >
             <Pencil />

@@ -105,41 +105,52 @@ const CommentSection = ({ project, handleSetLoading }) => {
 
   const handleSubmitComment = async (event) => {
     event.preventDefault();
-    const commentObject = {
+    const isEditing = editTogle !== null;
+    var commentObject = {
       project_name: project.project_name,
       author: session.user.namaLengkap,
       text: text,
       version: project.version,
       status: selectedOption,
       filePath: "",
-      id: editTogle || "", // Include id only if editing
+      id: isEditing ? String(editTogle) : "",
     };
 
-    const isEditing = editTogle !== null;
     const method = isEditing ? "put" : "post";
     const actionTitle = isEditing
       ? `Editing Comment with ID: ${editTogle}`
       : "Uploading New Comment";
-
+    const url = isEditing
+      ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${commentObject.project_name}  ${commentObject.version}/comments/${editTogle}`
+      : `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${commentObject.project_name}  ${commentObject.version}/comments`;
     showNotification("general", actionTitle);
     await axios({
       method: method,
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${
-        project.project_name + "  " + project.version
-      }/comments`,
+      url: url,
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
         "Content-Type": "application/json",
       },
-      data: JSON.stringify(commentObject), // Use 'data' instead of 'body' for axios
+      data: commentObject, // Use 'data' instead of 'body' for axios
     })
       .then((response) => {
-        console.log(response);
         if (response.status === 200) {
-          showNotification("success", "response.data.message");
-          commentObject.id = response.data.id;
+          showNotification("success", response.data.message);
           commentObject.date = response.data.date;
-          commentObject.folder = project.project_name;
+          if (!isEditing) {
+            commentObject.id = response.data.id;
+            commentObject.folder = project.project_name;
+          }
+          const newComments = isEditing
+            ? comments.map((item) =>
+                String(item.id) === String(commentObject.id)
+                  ? { ...commentObject }
+                  : item
+              )
+            : [commentObject, ...comments];
+          
+          setComments(newComments);
+          console.log(newComments,comments)
         } else {
           showNotification(
             "error",
@@ -147,7 +158,6 @@ const CommentSection = ({ project, handleSetLoading }) => {
           );
           return;
         }
-        handleSetLoading(false);
       })
       .catch((error) => console.log(error.message));
 
@@ -275,20 +285,8 @@ const CommentSection = ({ project, handleSetLoading }) => {
 
       // Update UI and clear form
     }
-    setComments((prevItems) => {
-      if (editTogle === null) {
-        // Adding a new comment
-        return [commentObject, ...prevItems];
-      } else {
-        // Updating an existing comment
-        return prevItems.map((item) =>
-          item.id === commentObject.id ? commentObject : item
-        );
-      }
-    });
-
     resetState();
-    setIsOpen(true);
+    setIsOpen(!isOpen)
   };
 
   const handleFileChange = (event) => {

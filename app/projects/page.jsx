@@ -47,43 +47,49 @@ const Projects = () => {
   
   
   useEffect(() => {
-    if (status === "loading") return; 
-
+    if (status === "loading") return; // Wait for session loading
+  
     if (!session) {
       router.push("/login");
       return;
     }
-
+  
     const fetchProjects = async () => {
-      await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/projects",{headers:{
-        Authorization: `Bearer ${session.accessToken}`,
-        "Content-Type": "application/json",
-      }}).then((response)=>{
-        const orderedData=groupProjectsByProjectName(response.data);
-        var catalogFinal = [];
-      Object.entries(orderedData).forEach(([key, value]) => {
-        catalogFinal.push(value[0]);
-      });
-      var dataFinal = {};
-      Object.entries(orderedData).forEach(([key, value]) => {
-        dataFinal[key] = {
-          isOpen: false,
-          title: key,
-          projects: value,
-        };
-      })
-
-      const filters=getFilter(catalogFinal)
-      setProjectCatalog(catalogFinal);
-      setFilteredProject(catalogFinal)
-      setProjects(dataFinal);
-      setSearchResult(dataFinal);
-      setListFilters(filters)
-      }).catch((error)=>console.log(error.message));
-      setLoadingProjects(false)
+      try {
+        const response = await axios.get(
+          process.env.NEXT_PUBLIC_BASE_URL + "/api/projects",
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        const orderedData = groupProjectsByProjectName(response.data);
+        let catalogFinal = Object.values(orderedData).map((value) => value[0]);
+  
+        const dataFinal = Object.fromEntries(
+          Object.entries(orderedData).map(([key, value]) => [
+            key,
+            { isOpen: false, title: key, projects: value },
+          ])
+        );
+  
+        setProjectCatalog(catalogFinal);
+        setFilteredProject(catalogFinal);
+        setProjects(dataFinal);
+        setSearchResult(dataFinal);
+        setListFilters(getFilter(catalogFinal));
+      } catch (error) {
+        console.log("Error fetching projects:", error.message);
+      } finally {
+        setLoadingProjects(false);
+      }
     };
+  
     fetchProjects();
-  }, [session, router,status]);
+  }, [session?.user?.role, status]);
 
   if (loadingProjects) {
     return <Loading />; // You can replace this with a loading spinner or any other loading indicator

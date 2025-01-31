@@ -20,6 +20,7 @@ const Login = () => {
     if (status === "loading") return;
     if (session) {
       router.push("/");
+      return;
     }
   }, [session, router,status]);
 
