@@ -8,13 +8,12 @@ import {
   PDFViewer,
   Image,
 } from "@react-pdf/renderer";
-import Logo from "../public/sol.png";
 const styles = StyleSheet.create({
   page: {
     flexDirection: "col",
     backgroundColor: "white",
-    padding: 10,
-    fontFamily:"Helvetica"
+    padding: 25,
+    fontFamily: "Helvetica",
   },
   container: {
     flexDirection: "row",
@@ -32,48 +31,34 @@ const styles = StyleSheet.create({
   table: {
     display: "table",
     width: "100%",
-  },
-  tableRow: {
-    flexDirection: "row",
-    fontSize: 12,
-  },
-  tableCell: {
-    flex: 1,
-    padding: 5,
     borderStyle: "solid",
     borderWidth: 1,
-    borderColor: "#000",
-  },
-  tableHeading: {
-    fontSize: 12,
-    fontWeight: "bold",
-    textAlign:"center"
+    borderCollapse: "collapse",
+    borderColor: "gray",
   },
   image: {
-    width: 120,
+    width: 100,
     height: 100,
     marginBottom: 10,
   },
-  attachmentTable: {
-    display: "table",
-    fontSize: 12,
-    width: "100%",
+  row: { flexDirection: "row" },
+  header: {
+    backgroundColor: "#305494",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  color: {
+    backgroundColor: "#e0e4f4",
+  },
+  cell: {
     borderStyle: "solid",
     borderWidth: 1,
-    borderColor: "#000",
-  },
-  attachmentRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#000",
-    borderBottomStyle: "solid",
     padding: 5,
+    fontSize: 10,
   },
-  cellNo: {
-    padding: 5,
-    flex: 0.5, // Makes this column narrower
-    textAlign: "start",
-  },
+  smallCell: { width: "25%" },
+  largeCell: { width: "75%" },
   cellAttachment: {
     padding: 5,
     flex: 5, // Increases width for this column
@@ -85,392 +70,398 @@ const styles = StyleSheet.create({
     textAlign: "start",
   },
   imageContainer: {
-    justifyContent: "start",
+    flexDirection: "column",
+    alignSelf: "stretch", 
+    justifyContent:"start",
+    width: "100%", 
+    marginBottom: 10,
   },
   imageAttachment: {
-    marginVertical: 2,
+    objectFit: "contain",
+    justifyContent:"start",
+    alignItems:"flex-start",
+    width: "100%", 
+    height: 200, 
+    marginBottom: 10, 
   },
 });
-function formatDate(inputDate) {
-  // Split the input date string by '/' and create a new Date object
-  const parts = inputDate.split("/");
-  const date = new Date(parts[2], parts[1] - 1, parts[0]); // Month is zero-based
 
-  // Format the date
-  const options = { day: "numeric", month: "long", year: "numeric" };
-  return date.toLocaleDateString("id-ID", options);
-}
+const formatDate = (dateString) => {
+  const months = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  const dateObj = new Date(dateString);
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = "2024"; // Force the year to 2024
+
+  return `${day} ${month} ${year}`;
+};
 const BAUATDoc = ({ formData }) => {
-  const ttd =formData.ttd.split("\n").length > 1 ? formData.ttd.split("\n") : [];
+  const ttd =
+    formData.ttd.split("\n").length > 1 ? formData.ttd.split("\n") : [];
   return (
     <Document
       style={{ width: "100%", height: "100%" }}
       title={`BA UAT ${formData.noDokumen}`}
     >
-      <Page style={styles.page}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "start",
-            alignItems: "center",
-            padding: 20,
-            paddingBottom: 10,
-            paddingTop:10,
-            gap: 20,
-            paddingTop: 30,
-            flexGrow: 1,
-          }}
-        >
-          <Image
-            src="/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogokis.6e7dfc79.jpg&w=1080&q=75"
-            style={styles.image}
-            alt={"Logo KIS"}
-          />
-          <Text style={{ fontSize: 25, fontWeight: "900" }}>
-            PT. KLIK INDOMARET SUKSES
-          </Text>
-        </View>
+      <Page style={styles.page} orientation="landscape">
         <View
           style={{
             flexDirection: "col",
             gap: "5",
             justifyContent: "center",
             alignItems: "center",
-            padding: "10",
             marginBottom: 30,
-            border: "2pt solid black",
-            margin: 20,
-            marginTop:0,
-            backgroundColor: "gray",
-          }}
-        >
-          <Text style={{ fontSize: 25, fontWeight: "bold" }}>
-            USER ACCEPTANCE TEST (UAT)
-          </Text>
-          <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-            No. Dokumen : {formData.noDokumen}
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "col",
-            gap: "5",
-            justifyContent: "center",
-            alignItems: "center",
-            marginBottom: 50,
             // border: "2pt solid black",
             margin: 20,
+            marginTop: 10,
           }}
         >
           <View style={styles.table}>
-            {/* Table header */}
-            <View style={styles.tableRow}>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>Nama Proyek</Text>
-              </View>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>Jenis Transaksi</Text>
-              </View>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>Tanggal</Text>
-              </View>
+            {/* Header Row */}
+            <View style={styles.row}>
+              <Text
+                style={[
+                  styles.cell,
+                  {
+                    width: "25%",
+                    color: "#305494",
+                    fontSize: 24,
+                    height: "100px",
+                    display: "flex",
+                    flexDirection: "column",
+                  },
+                ]}
+              >
+                {"User" + "\n" + "Acceptance" + "\n" + "Test (UAT)"}
+              </Text>
             </View>
-            {/* Table rows */}
-            <View style={styles.tableRow}>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>{formData.project_name}</Text>
-              </View>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>{formData.jenisTransaksi}</Text>
-              </View>
-              <View style={styles.tableCell}>
-                <Text style={styles.tableHeading}>{formData.date}</Text>
-              </View>
+
+            <View style={[styles.row]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>Unit</Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>Nama Aplikasi</Text>
             </View>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: "col",
-            gap: "5",
-            justifyContent: "center",
-            alignItems: "center",
-            marginBottom: 50,
-            margin: 20,
-          }}
-        >
-          <View style={styles.table}>
-            {/* Table header */}
-            <View style={styles.tableRow}>
-              <View style={styles.tableCell}>
-                <Text styles={styles.tableHeading}>Informasi</Text>
-              </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                PT KLIK INDOMARET SUKSES
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.project_name}
+              </Text>
             </View>
-            {/* Table rows */}
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Program Terkait</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                <Text>{formData.programTerkait}</Text>
-              </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>DEPT.IT</Text>
+              <Text style={[styles.cell, { width: "25%" }]}>PIC UAT</Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                Versi Aplikasi
+              </Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Versi</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                <Text>{formData.version}</Text>
-              </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>IT KIS</Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.picUAT}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.version}
+              </Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Jenis</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                <Text>{formData.jenisTransaksi}</Text>
-              </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                No. PRPK / Tanggal / PIC PRPK
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                DokTek / API / Table (jika ada)
+              </Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Deskripsi</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                <Text>{formData.deskripsi}</Text>
-              </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.prpk}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.doktekAPI}
+              </Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Lokasi</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                <Text>{formData.lokasi}</Text>
-              </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                No. Memo CPS / Tanggal (jika ada)
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                No. Memo CIA / Tanggal (jika ada)
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
             </View>
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, width: "25%" }}>
-                <Text styles={styles.tableHeading}>Peserta UAT</Text>
-              </View>
-              <View style={{ ...styles.tableCell, width: "75%" }}>
-                {formData.peserta.split("\n").map((people, index) => (
-                  <Text key={index + 1} styles={styles.text}>
-                    {index + 1}. {people}
-                  </Text>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.prpk}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.cia}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>Nama Project</Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.project_name}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>Tanggal UAT</Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {"UAT Ke (1/2/3/4)"}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.tglUAT}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.uatKE}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {"Lokasi (HO/Cabang/Regional)"}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {"Tanggal live (dd-mon-yyyy)"}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+            <View style={[styles.row, styles.color]}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.lokasi}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formatDate(formData.tglLive)}
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>Peserta UAT</Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                Departemen Peserta
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
+              <Text style={[styles.cell, { width: "25%" }]}>
+                {formData.peserta.split(";").map((orang, index) => (
+                  <>
+                    {index + 1}.{orang.split(":")[0]}
+                    {"\n"}
+                  </>
                 ))}
-              </View>
-            </View>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: "col",
-            gap: "5",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "10",
-            marginBottom: 50,
-            border: "1pt solid black",
-            margin: 20,
-          }}
-        >
-          <Text style={styles.text}>{formData.message}</Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "col",
-            gap: "5",
-            justifyContent: "center",
-            alignItems: "center",
-            marginBottom: 50,
-            // border: "2pt solid black",
-            margin: 20,
-          }}
-        >
-          <View style={styles.table}>
-            {/* Table header */}
-            <View style={styles.tableRow}>
-              <View style={styles.tableCell}>
-                <Text style={{fontWeight:"bold"}}>Dokumen Terlampir</Text>
-              </View>
-            </View>
-            {/* Table rows */}
-            <View style={styles.tableRow}>
-              <View style={{ ...styles.tableCell, paddingLeft: 40 }}>
-                {formData.attachments.map((doc, index) => (
-                  <Text key={index + 1} styles={styles.text}>
-                    {index + 1}. {doc.title}
-                  </Text>
+              </Text>
+              <Text
+                style={[
+                  styles.cell,
+                  { width: "25%", display: "flex", flexDirection: "column" },
+                ]}
+              >
+                {formData.peserta.split(";").map((orang, index) => (
+                  <>
+                    {index + 1}.{orang.split(":")[1]}
+                    {"\n"}
+                  </>
                 ))}
-              </View>
+              </Text>
+              <Text style={[styles.cell, { width: "25%" }]}></Text>
             </View>
           </View>
         </View>
       </Page>
-      <Page break style={styles.page}>
-        <View
-          style={{
-            // justifyContent: "center",
-            // alignItems: "flex-end",
-            marginBottom: 50,
-            border: "1pt solid black",
-            margin: 20,
-            fontSize: 12,
-          }}
-        >
-          <View
-            style={{
-              justifyContent: "end",
-              alignItems: "flex-end",
-              marginBottom: 50,
-              margin: 20,
-              fontSize: 12,
-            }}
-          >
-            <Text style={{ marginBottom: 100, textAlign: "right" }}>
-              Jakarta, {formatDate(formData.date)}
+      <Page size={"A4"} orientation="landscape" style={styles.page}>
+        <View style={styles.table}>
+          <View style={[styles.row, styles.header]}>
+            <Text style={[styles.cell, { width: "5%" }]}>No</Text>
+            <Text style={[styles.cell, { width: "15%" }]}>Deskripsi</Text>
+            <Text style={[styles.cell, { width: "20%" }]}>Skenario Test</Text>
+            <Text style={[styles.cell, { width: "15%" }]}>
+              Hasil yang Diharapkan
             </Text>
-            <Text style={{fontSize:10 ,textAlign: "center" }}>{formData.support}</Text>
-            <Text style={{fontSize:10 ,textAlign: "center" }}>Application QA and Implementation</Text>
+            <Text style={[styles.cell, { width: "15%" }]}>
+              Referensi Gambar / Hasil Laporan
+            </Text>
+            <Text style={[styles.cell, { width: "15%" }]}>Pass/Fail</Text>
+            <Text style={[styles.cell, { width: "15%" }]}>Keterangan</Text>
           </View>
-          {ttd.length > 0 && (
-            <View>
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 50,
-                  margin: 20,
-                  fontSize: 12,
-                }}
-              >
-                <Text>Diketahui Oleh</Text>
+          <View style={[styles.row, styles.header]}>
+            <Text
+              style={[
+                styles.row,
+                styles.color,
+                { width: "100%", color: "black" },
+              ]}
+            >
+              Application 1
+            </Text>
+          </View>
+          {formData.attachments &&
+            formData.attachments.map((detail, index) => (
+              <View key={index} style={[styles.row]}>
+                <Text style={[styles.cell, { width: "5%" }, styles.color]}>
+                  {index + 1}
+                </Text>
+                <Text style={[styles.cell, { width: "15%" }, styles.color]}>
+                  {detail.desc}
+                </Text>
+                <Text style={[styles.cell, { width: "20%" }]}>
+                  {detail.skenario}
+                </Text>
+                <Text style={[styles.cell, { width: "15%" }, styles.color]}>
+                  {detail.expected}
+                </Text>
+                <Text style={[styles.cell, { width: "15%" }]}>
+                  {detail.title}
+                </Text>
+                <Text style={[styles.cell, { width: "15%" }, styles.color]}>
+                  {detail.passFail}
+                </Text>
+                <Text style={[styles.cell, { width: "15%" }]}>
+                  {detail.keterangan}
+                </Text>
               </View>
-              <View
-                style={{
-                  justifyContent: "space-between",
-                  textAlign: "justify",
-                  marginTop: 50,
-                  margin: 20,
-                  fontSize: 12,
-                  flexDirection: "row",
-                  paddingTop: 60,
-                }}
-              >
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginBottom: 50,
-                    margin: 20,
-                    fontSize: 10,
-                  }}
-                >
-                  <Text>{ttd[0].split("|")[0]}</Text>
-                  <Text>{ttd[0].split("|")[1]}</Text>
-                </View>
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginBottom: 50,
-                    margin: 20,
-                    fontSize: 10,
-                  }}
-                >
-                  <Text>{ttd[1].split("|")[0]}</Text>
-                  <Text>{ttd[1].split("|")[1]}</Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 50,
-                  margin: 20,
-                  fontSize: 12,
-                }}
-              >
-                <Text>Disetujui Oleh</Text>
-              </View>
-
-              <View
-                style={{
-                  justifyContent: "space-between",
-                  textAlign: "justify",
-                  marginTop: 50,
-                  margin: 20,
-                  fontSize: 10,
-                  flexDirection: "row",
-                  paddingTop: 60,
-                }}
-              >
-                {ttd
-                  .slice(2, 5)
-                  .reverse()
-                  .map((item, index) => {
-                    const [name, role] = item.split("|");
-                    return (
-                      <View
-                        key={index}
-                        style={{
-                          justifyContent: "between",
-                          alignItems: "center",
-                          marginBottom: 50,
-                          margin: 10,
-                          fontSize: 10,
-                        }}
-                      >
-                        <Text>{name}</Text>
-                        <Text style={{ flexWrap: "wrap" }} numberOfLines={2}>
-                          {role}
-                        </Text>
-                      </View>
-                    );
-                  })}
-              </View>
-            </View>
-          )}
+            ))}
         </View>
       </Page>
-
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Lampiran</Text>
-        <View style={styles.attachmentTable}>
-          <View style={styles.attachmentRow}>
-            <Text style={styles.cellNo}>No</Text>
-            <Text style={styles.cellAttachment}>Lampiran</Text>
-            <Text style={styles.cellKeterangan}>Hasil</Text>
+      <Page size={"A4"} orientation="landscape" style={styles.page}>
+        <View style={styles.table}>
+          <View style={[styles.row, styles.header]}>
+            <Text style={[styles.cell, { width: "100%" }]}>
+              Referensi Gambar / Laporan
+            </Text>
           </View>
-          {formData.attachments.map((attachment, index) => (
-            <View style={styles.attachmentRow} key={index}>
-              <Text style={styles.cellNo}>{index + 1}</Text>
-              <View style={styles.cellAttachment}>
-                {attachment.images && attachment.images.length > 0 ? (
-                  <View style={styles.imageContainer}>
-                    <Text style={{ marginBottom: 10 }}>{attachment.title}</Text>
-                    {attachment.images.map((image, imgIndex) => (
-                      <Image
-                        key={imgIndex}
-                        style={styles.imageAttachment}
-                        src={image}
-                      />
-                    ))}
-                    <Text style={{ marginBottom: 10, textAlign:"start" }}>
-                      {attachment.description}
-                    </Text>
-                  </View>
-                ) : (
-                  <View>
-                    <Text style={{ marginBottom: 10 ,fontWeight:"bold"}}>{attachment.title}</Text>
-                    <Text style={{ marginBottom: 10 }}>
-                      {attachment.description}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.cellKeterangan}>{attachment.hasil}</Text>
+          <View style={styles.imageContainer}>
+            {formData.attachments.map((attachment, index) => (
+              <View key={index} style={styles.imageContainer}>
+              {attachment.images && attachment.images.length > 0 ? (
+                <>
+                  <Text style={{ marginBottom: 10, fontSize: 14 }}>
+                    {attachment.title}
+                  </Text>
+                  {attachment.images.map((image, imgIndex) => (
+                    <Image
+                      key={imgIndex}
+                      style={styles.imageAttachment}
+                      src={image}
+                    />
+                  ))}
+                </>
+              ) : null}
             </View>
-          ))}
+            ))}
+          </View>
+        </View>
+      </Page>
+      <Page size={"A4"} orientation="landscape" style={styles.page}>
+        <View style={styles.table}>
+          <View style={styles.row}>
+            <Text
+              style={[
+                styles.cell,
+                {
+                  width: "20%",
+                  fontSize: 24,
+                  backgroundColor: "green",
+                  fontWeight: "bold",
+                },
+              ]}
+            >
+              APPROVAL
+            </Text>
+          </View>
+
+          <View style={[styles.row]}>
+            {formData.ttd.split(";").map((peserta, index) => (
+              <Text
+                key={index}
+                style={[
+                  styles.cell,
+                  { flex: 1, textAlign: "center" },
+                  styles.header,
+                ]}
+              >
+                {peserta.split(":")[1]}
+              </Text>
+            ))}
+          </View>
+          <View style={[styles.row]}>
+            {formData.ttd.split(";").map((peserta, index) => (
+              <Text
+                key={index}
+                style={[styles.cell, { flex: 1, textAlign: "center" }]}
+              >
+                {formatDate(formData.tglUAT)}
+              </Text>
+            ))}
+          </View>
+          <View style={[styles.row, { height: "100px" }]}>
+            {formData.ttd.split(";").map((peserta, index) => (
+              <Text key={index} style={[styles.cell, { flex: 1 }]}></Text>
+            ))}
+          </View>
+          <View style={[styles.row, { backgroundColor: "#e0e4f4" }]}>
+            {formData.ttd.split(";").map((peserta, index) => (
+              <Text
+                key={index}
+                style={[
+                  styles.cell,
+                  { flex: 1, textAlign: "center", fontWeight: "bold" },
+                ]}
+              >
+                {peserta.split(":")[0] + "\n" + peserta.split(":")[2]}
+              </Text>
+            ))}
+          </View>
         </View>
       </Page>
     </Document>

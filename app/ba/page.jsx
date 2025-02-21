@@ -3,8 +3,6 @@ import Loading from "@/components/Loading";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import AdminPage from "@/components/AdminPage";
-import DashboardPage from "@/components/DashboardPage";
 import InputProject from "@/components/InputProject";
 import UpdateProject from "@/components/UpdateProject";
 import DeleteProject from "@/components/DeleteProject";
@@ -12,6 +10,7 @@ import ProjectsTable from "@/components/Projects";
 import ReleaseBADev from "@/components/ReleaseBADev";
 import ReleaseBAUAT from "@/components/ReleaseBAUAT";
 import ReleaseBaRelease from "@/components/ReleaseBARelease";
+import axios from "axios";
 const CreateBA = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -42,51 +41,51 @@ const CreateBA = () => {
 
     setUser(session.user);
     if (session.user.role === "developer") {
-        const option = options.filter(
-          (item) => item !== "Release BA UAT" && item !== "Release BA Release"
-        );
-        setOption(option);
-      } else if (session.user.role === "support") {
-        const option = options.filter((item) => item !== "Release BA Development");
-        setOption(option);
-      } else {
-        setOption(options);
-      }
+      const option = options.filter(
+        (item) => item !== "Release BA UAT" && item !== "Release BA Release"
+      );
+      setOption(option);
+    } else if (session.user.role === "support") {
+      const option = options.filter(
+        (item) => item !== "Release BA Development"
+      );
+      setOption(option);
+    } else {
+      setOption(options);
+    }
     const fetchUserData = async () => {
-      try {
-        const url = session.user.role.includes("manager")
-          ? process.env.NEXT_PUBLIC_BASE_URL+"/api/projects"
-          : process.env.NEXT_PUBLIC_BASE_URL+`/api/projects/user/${session.user.namaLengkap}`;
-        const response = await fetch(url,{
+      const url = session.user.role.includes("manager")
+        ? process.env.NEXT_PUBLIC_BASE_URL + "/api/projects"
+        : process.env.NEXT_PUBLIC_BASE_URL +
+          `/api/projects/user/${session.user.namaLengkap}`;
+      await axios
+        .get(url, {
           headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
-          }
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => {
+          setProjects(response.data);
+        })
+        .catch((error) => {
+          console.log("Failed to fetch data", error);
+          setProjects([]);
         });
-        if (response.ok) {
-          const data = await response.json();
-          setProjects(data);
-        } else {
-          throw new Error("Failed to fetch data");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error.message);
-        setProjects([])
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
     const fetchUsers = async () => {
-        const userResponse = await fetch(process.env.NEXT_PUBLIC_BASE_URL+"/api/user",{
+      await axios
+        .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
           headers: {
-            'Authorization': `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            'Content-Type': 'application/json', // Optional: set content type if needed
-          }
-        });
-        const data = await userResponse.json();
-        setUsers(data);
-      };
-    
+            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+            "Content-Type": "application/json", // Optional: set content type if needed
+          },
+        })
+        .then((response) => setUsers(response.data))
+        .catch((error) => console.log("error fetching users ", error));
+    };
+
     fetchUserData();
     fetchUsers();
   }, [session]);
@@ -137,7 +136,9 @@ const CreateBA = () => {
         </div>
       </div>
       {formData.option === "Input" && <InputProject users={users} />}
-      {formData.option === "Update" && <UpdateProject users={users} projects={projects} />}
+      {formData.option === "Update" && (
+        <UpdateProject users={users} projects={projects} />
+      )}
       {formData.option === "Delete" && <DeleteProject projects={projects} />}
       {formData.option === "View Project" && (
         <>
@@ -149,13 +150,13 @@ const CreateBA = () => {
         </>
       )}
       {formData.option === "Release BA Development" && (
-        <ReleaseBADev projects={projects} users={users}/>
+        <ReleaseBADev projects={projects} users={users} />
       )}
-      {formData.option==="Release BA UAT"&&(
-        <ReleaseBAUAT projects={projects} users={users}/>
+      {formData.option === "Release BA UAT" && (
+        <ReleaseBAUAT projects={projects} users={users} />
       )}
-      {formData.option==="Release BA Release"&&(
-        <ReleaseBaRelease projects={projects}/>
+      {formData.option === "Release BA Release" && (
+        <ReleaseBaRelease projects={projects} />
       )}
     </section>
   );

@@ -53,7 +53,7 @@ const EditProfile = ({ user }) => {
             "general",
             "Will be redirect into login page to login again"
           );
-          await signOut();
+          await signOut({redirect:false}).then(()=>router.push("/login"))
         } else {
           showNotification("error", "Failed updating profile!");
         }

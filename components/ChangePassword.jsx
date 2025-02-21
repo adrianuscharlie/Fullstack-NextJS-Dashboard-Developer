@@ -59,7 +59,7 @@ const ChangePassword = ({ user, handleSetLoading }) => {
               "general",
               "Will be redirect into login page to login again"
             );
-            await signOut();
+            await signOut({redirect:false}).then(()=>router.push("/login"))
           } else showNotification("error", "Failed to change password");
         });
     } else showNotification("error", "new password must be match!");

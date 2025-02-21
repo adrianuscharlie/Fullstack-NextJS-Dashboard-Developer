@@ -32,16 +32,16 @@ const Notification = ({ type = 'general', title, onActionClick, onClose }) => {
   const getTitleClass = () => {
     switch (type) {
       case 'success':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-green-600';
       case 'failed':
-        return 'text-red-600 dark:text-red-400';
+        return 'text-red-600';
       default:
-        return 'text-black dark:text-white';
+        return 'text-black ';
     }
   };
 
   return (
-    <div className={`max-w-[557px] rounded-lg bg-white p-5 fixed top-4 left-1/2 transform -translate-x-1/2 z-50 border py-6 pl-4 pr-5.5 sm:pl-6 ${type === 'general' ? 'border-stroke dark:border-strokedark dark:bg-meta-4' : ''}`}>
+    <div className={`max-w-[557px] rounded-lg bg-white p-5 fixed top-4 left-1/2 transform -translate-x-1/2 z-50 border py-6 pl-4 pr-5.5 sm:pl-6 ${type === 'general' ? 'border-stroke ' : ''}`}>
       <div className="flex justify-between gap-5">
         <div className="flex flex-grow gap-5">
           <div>

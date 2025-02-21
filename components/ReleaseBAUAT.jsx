@@ -10,27 +10,25 @@ const ReleaseBAUAT = ({ projects, users }) => {
   const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
   const [attachments, setAttachments] = useState([
-    { title: "", description: "", images: [], hasil: "Sesuai" },
+    { name: "", skenario: "", expected: "", passFail: "", images: [] },
   ]);
   const [formData, setFormData] = useState({
-    noDokumen: "",
     project_name: "",
-    jenisTransaksi: "",
+    picUAT: "",
+    noPRPK: "",
+    noCPS: "",
+    noCIA: "",
+    tglUAT: "",
+    tglLive: "",
+    uatKE: "",
     date: "",
-    programTerkait: "",
     version: "",
-    deskripsi: "",
     lokasi: "",
     peserta: "",
     ttd: "",
-    message:
-      "Sesuai dengan pengujian, maka User Acceptance Test(UAT) telah selesai dilakukan finalisasi untuk sistem aplikasi di atas dan hasilnya DITERIMA",
+    date: "",
+    doktekAPI: "",
     attachments: attachments,
-    support: "",
-    manager: "S.Handika Panudju",
-    itDirector: "Eddy Gunawan",
-    tglAwal: "",
-    tglAkhir: "",
   });
 
   const handleSelectedProject = (e) => {
@@ -64,17 +62,15 @@ const ReleaseBAUAT = ({ projects, users }) => {
       ...prevData,
       ["project_name"]: foundProject.project_name,
       ["version"]: foundProject.version,
-      ["deskripsi"]: foundProject.notes,
-      ["support"]: foundProject.support,
     }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
+    setFormData((prevData) => ({ 
       ...prevData,
       [name]: value,
-    }));
+    }));  
     const currentDate = new Date();
     const day = currentDate.getDate(); // Returns the day of the month (1-31)
     const month = currentDate.getMonth() + 1; // Returns the month (0-11), add 1 to get the correct month (1-12)
@@ -86,7 +82,7 @@ const ReleaseBAUAT = ({ projects, users }) => {
     }));
   };
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
     const currentDate = new Date();
 
     // Get the day, month, and year separately
@@ -114,14 +110,15 @@ const ReleaseBAUAT = ({ projects, users }) => {
           ...prevData,
           ["noDokumen"]: response.data,
         }));
-      }).catch((error)=>console.log(error.message))
+      })
+      .catch((error) => console.log(error.message));
   };
 
   // Handle adding a new attachment
   const handleAddAttachment = () => {
     setAttachments([
       ...attachments,
-      { title: "", description: "", images: [] },
+      { title: "", desc: "", skenario:"",expected:"",keterangan:"",images: [] },
     ]);
   };
 
@@ -223,96 +220,85 @@ const ReleaseBAUAT = ({ projects, users }) => {
             </div>
             {formData.version !== "" && (
               <>
-                <div className="p-4">
-                  <label htmlFor="dropdown">No Dokumen</label>
+                <div className=" p-4">
+                  <label htmlFor="dropdown">PIC UAT</label>
                 </div>
-                <div className="p-4 flex items-start gap-10">
-                  {/* Conditionally render the button when noDokumen is null */}
-                  {!formData.noDokumen && (
-                    <button
-                      onClick={handleNoDokumen}
-                      className="inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-sky-500 rounded-lg"
-                    >
-                      Generate No Dokumen
-                    </button>
-                  )}
-
-                  {/* Display the noDokumen value if available */}
-                  {formData.noDokumen && <div>{formData.noDokumen}</div>}
+                <div className=" p-4">
+                  <input
+                    id="comment"
+                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    placeholder="Masukan nama PIC UAT"
+                    name="picUAT"
+                    required
+                    value={formData.pic}
+                    onChange={handleChange}
+                  />
                 </div>
-                <div className="p-4">
-                  <label htmlFor="dropdown">Jenis Transaksi</label>
+                <div className=" p-4">
+                  <label htmlFor="dropdown">
+                    DokTek / API / Table (jika ada)
+                  </label>
                 </div>
-                <div className="p-4">
-                  <div>
-                    <input
-                      type="text"
-                      id="inputField"
-                      name="jenisTransaksi"
-                      value={formData.jenisTransaksi}
-                      onChange={handleChange}
-                      className="text-base w-full p-2 bg-gray-100"
-                      placeholder="Masukan jenis transaksi"
-                      required
-                    />
-                  </div>
+                <div className=" p-4">
+                  <input
+                    id="comment"
+                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    placeholder="PRPK_999_06-24_E_PMO / 20 Mei 2024 / Agus"
+                    name="doktekAPI"
+                    required
+                    value={formData.doktekAPI}
+                    onChange={handleChange}
+                  />
                 </div>
-                <div className="p-4">
-                  <label htmlFor="dropdown">Program Terkait</label>
+                <div className=" p-4">
+                  <label htmlFor="dropdown">
+                    No. PRPK / Tanggal / PIC PRPK
+                  </label>
                 </div>
-                <div className="p-4">
-                  <div>
-                    <input
-                      type="text"
-                      id="inputField"
-                      name="programTerkait"
-                      value={formData.programTerkait}
-                      onChange={handleChange}
-                      className="text-base w-full p-2 bg-gray-100"
-                      placeholder="Masukan program terkait..."
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="p-4">
-                  <label htmlFor="dropdown">Support Name</label>
-                </div>
-                <div className="p-4">
-                  <div>
-                    <select
-                      id="dropdown"
-                      onChange={handleChange}
-                      value={formData.support}
-                      name="support"
-                      className="text-base p-2 bg-gray-100"
-                    >
-                      <option value="" disabled>
-                        Select an option
-                      </option>
-                      {users
-                        .filter((user) => user.role === "support") // Filter by role
-                        .map((user, index) => (
-                          <option key={index} value={user.namaLengkap}>
-                            {user.namaLengkap}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
+                <div className=" p-4">
+                  <input
+                    id="comment"
+                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    placeholder="PRPK_999_06-24_E_PMO / 20 Mei 2024 / Agus"
+                    name="prpk"
+                    required
+                    value={formData.prpk}
+                    onChange={handleChange}
+                  />
                 </div>
 
-                <div className="p-4">
-                  <label htmlFor="dropdown">Deskripsi</label>
+                <div className=" p-4">
+                  <label htmlFor="dropdown">
+                    No. Memo CPS / Tanggal (jika ada)
+                  </label>
                 </div>
-                <div className="p-4">
-                  <div>
-                    <textarea
-                      onChange={handleChange}
-                      className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
-                      placeholder="Masukan nama peserta dipisahkan oleh enter"
-                      name="deskripsi"
-                      value={formData.deskripsi}
-                    />
-                  </div>
+                <div className=" p-4">
+                  <input
+                    id="comment"
+                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    placeholder="814 - CPS – 24 / 15 Mei 2024"
+                    name="cps"
+                    required
+                    value={formData.cps}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className=" p-4">
+                  <label htmlFor="dropdown">
+                    No. Memo CIA / Tanggal (jika ada)
+                  </label>
+                </div>
+                <div className=" p-4">
+                  <input
+                    id="comment"
+                    className="p-4 w-full text-sm bg-gray-100 text-gray-900 border-0 focus:ring-0 focus:outline-none"
+                    placeholder=""
+                    name="cia"
+                    required
+                    value={formData.picCPS}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className="p-4">
                   <label htmlFor="dropdown">Lokasi</label>
@@ -326,38 +312,38 @@ const ReleaseBAUAT = ({ projects, users }) => {
                       value={formData.lokasi}
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
-                      placeholder="Masukan lokasi..."
+                      placeholder=" (HO/Cabang/Regional)"
                       required
                     />
                   </div>
                 </div>
                 <div className="p-4">
-                  <label htmlFor="dropdown">Tanggal Awal</label>
+                  <label htmlFor="dropdown">Tanggal UAT</label>
                 </div>
                 <div className="p-4">
                   <div>
                     <input
                       type="date"
                       id="inputField"
-                      name="tglAwal"
-                      value={formData.tglAwal}
+                      name="tglUAT"
+                      value={formData.tglUAT}
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
-                      placeholder="Masukan Tanggal Awal..."
+                      placeholder="Masukan Tanggal UAT..."
                       required
                     />
                   </div>
                 </div>
                 <div className="p-4">
-                  <label htmlFor="dropdown">Tanggal Akhir</label>
+                  <label htmlFor="dropdown">Tanggal Live</label>
                 </div>
                 <div className="p-4">
                   <div>
                     <input
                       type="date"
                       id="inputField"
-                      name="tglAkhir"
-                      value={formData.tglAkhir}
+                      name="tglLive"
+                      value={formData.tglLive}
                       onChange={handleChange}
                       className="text-base w-full p-2 bg-gray-100"
                       placeholder="Masukan Tanggal Akhir..."
@@ -373,14 +359,14 @@ const ReleaseBAUAT = ({ projects, users }) => {
                     <textarea
                       onChange={handleChange}
                       className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
-                      placeholder="Masukan list dokumen dipisahkan oleh enter"
+                      placeholder="Charlie:IT Development;Lian:IT QA & Support"
                       name="peserta"
                       required
                     />
                   </div>
                   <div className="flex p-2 items-center justify-start w-full">
                     <ul className="flex justify-start items-center gap gap-2 w-ful">
-                      {formData.peserta.split("\n").map((doc, index) => (
+                      {formData.peserta.split(";").map((doc, index) => (
                         <li
                           className="bg-gray-100 px-2 py-1 text-base rounded-md"
                           key={index}
@@ -399,14 +385,14 @@ const ReleaseBAUAT = ({ projects, users }) => {
                     <textarea
                       onChange={handleChange}
                       className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
-                      placeholder="Adrianus Charlie | Software Developer;"
+                      placeholder="Charlie:User:GA Manager;Charlie:User:SSD6 Manager"
                       name="ttd"
                       required
                     />
                   </div>
                   <div className="flex p-2 items-center justify-start w-full">
-                    <ul className="flex flex-col justify-start items-start gap gap-2 w-ful">
-                      {formData.ttd.split("\n").map((doc, index) => (
+                    <ul className="flex justify-start items-center gap gap-2 w-ful">
+                      {formData.ttd.split(";").map((doc, index) => (
                         <li
                           className="bg-gray-100 px-2 py-1 text-base rounded-md"
                           key={index}
@@ -419,20 +405,20 @@ const ReleaseBAUAT = ({ projects, users }) => {
                 </div>
 
                 <div className=" p-4">
-                  <label htmlFor="dropdown">Message</label>
+                  <label htmlFor="dropdown">UAT Ke {"(1/2/3/4)"}</label>
                 </div>
                 <div className=" p-4">
-                  <textarea
+                  <input
                     id="comment"
                     className="p-4 w-full text-sm text-gray-900 border-0 focus:ring-0 focus:outline-none bg-gray-100"
                     placeholder="Message for this BA Development"
-                    name="message"
+                    name="uatKE"
                     required
-                    value={formData.message}
+                    value={formData.uatKE}
                     onChange={handleChange}
                   />
                 </div>
-                <div className="p-4">Attachment Form</div>
+                <div className="p-4">Detail Hasil Test</div>
                 <div className="">
                   <div className="mx-auto p-6">
                     {attachments.map((attachment, index) => (
@@ -442,7 +428,7 @@ const ReleaseBAUAT = ({ projects, users }) => {
                       >
                         <div className="flex justify-between">
                           <h3 className="text-lg font-medium mb-2">
-                            Attachment {index + 1}
+                            Detail {index + 1}
                           </h3>
                           <button
                             type="button"
@@ -456,52 +442,99 @@ const ReleaseBAUAT = ({ projects, users }) => {
                         {/* Title of Attachment */}
                         <div className="mb-3">
                           <label className="block text-sm font-medium text-gray-700">
-                            Title of Attachment
+                            Deskripsi
                           </label>
+                          <input
+                            type="text"
+                            value={attachment.desc}
+                            onChange={(e) =>
+                              handleInputChange(index, "desc", e.target.value)
+                            }
+                            placeholder="Masukan nama program"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Skenario Test
+                          </label>
+                          <textarea
+                            value={attachment.skenario}
+                            onChange={(e) =>
+                              handleInputChange(
+                                index,
+                                "skenario",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Masukan skenario pengujian"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Hasil yang Diharapkan
+                          </label>
+                          <textarea
+                            value={attachment.expected}
+                            onChange={(e) =>
+                              handleInputChange(
+                                index,
+                                "expected",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Masukan hasil yang diharapkan"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Pass/Fail
+                          </label>
+                          <textarea
+                            value={attachment.passFail}
+                            onChange={(e) =>
+                              handleInputChange(
+                                index,
+                                "passFail",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Masukan hasil pass/fail"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Keterangan
+                          </label>
+                          <input
+                            type="text"
+                            value={attachment.keterangan}
+                            onChange={(e) =>
+                              handleInputChange(index, "keterangan", e.target.value)
+                            }
+                            placeholder="Masukan Keterangan"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        </div>
+                        {/* Attachment Image Upload */}
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Attachment Title
+                          </label>
+                          
                           <input
                             type="text"
                             value={attachment.title}
                             onChange={(e) =>
                               handleInputChange(index, "title", e.target.value)
                             }
-                            placeholder="Enter title"
+                            placeholder="Masukan nama attachment"
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                           />
                         </div>
-
-                        {/* Attachment Description */}
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Attachment Description
-                          </label>
-                          <textarea
-                            value={attachment.description}
-                            onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter description"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        {/* Attachment Description */}
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Attachment Result
-                          </label>
-                          <input
-                            value={attachment.hasil}
-                            onChange={(e) =>
-                              handleInputChange(index, "hasil", e.target.value)
-                            }
-                            placeholder="Enter description"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-
                         {/* Attachment Image Upload */}
                         <div className="mb-3">
                           <label className="block text-sm font-medium text-gray-700">
@@ -515,7 +548,6 @@ const ReleaseBAUAT = ({ projects, users }) => {
                             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                           />
                         </div>
-
                         {/* Preview of Uploaded Images */}
                         {attachment.images.length > 0 && (
                           <div className="mt-3">
@@ -534,9 +566,8 @@ const ReleaseBAUAT = ({ projects, users }) => {
                             </div>
                           </div>
                         )}
-
-                        {/* Remove Attachment Button */}
                       </div>
+                      
                     ))}
 
                     {/* Add New Attachment Button */}
@@ -556,14 +587,14 @@ const ReleaseBAUAT = ({ projects, users }) => {
                       document={
                         <BAUATDoc
                           formData={formData}
-                          filename={formData.noDokumen}
+                          fileName={formData.noDokumen}
                         />
                       }
                     >
                       {({ url, ...rest }) => {
                         return (
                           <a href={url} target="_blank">
-                            Create BA UAT
+                            Create BA Development
                           </a>
                         );
                       }}
@@ -575,6 +606,7 @@ const ReleaseBAUAT = ({ projects, users }) => {
           </>
         )}
       </form>
+      
       <div className="w-full h-full flex justify-center items-center">
         <div className="w-full flex flex-col justify-center items-center">
           <h1 className="h1 text-lg font-bold mb-5">Preview Document</h1>
