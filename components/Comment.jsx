@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { File, Pencil, User2, Day, Trash2 } from "lucide-react";
 import Notification from "./Notification";
 import { useSession } from "next-auth/react";
+import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 const CommentCard = ({ data, onAction }) => {
   const { data: session, status } = useSession();
@@ -53,20 +54,18 @@ const CommentCard = ({ data, onAction }) => {
       file.project_name +
       "_" +
       file.version;
-    showNotification(
-      "general",
-      "Downloading File :" + file.fileName + " ....."
-    );
+    const toastID=toast.loading("Downloading File :" + file.fileName + " .....")
     await axios
       .get(process.env.NEXT_PUBLIC_BASE_URL + `/api/files/${getRequest}`, {
         headers: {
           Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
           "Content-Type": "application/json", // Optional: set content type if needed
         },
+        responseType: "blob",
       })
       .then(async (response) => {
         if (response.status === 200) {
-          const blob = await response.blob();
+          const blob = await response.data
           // Create a blob URL for the file content
           const url = window.URL.createObjectURL(blob);
 
@@ -82,16 +81,28 @@ const CommentCard = ({ data, onAction }) => {
 
           // Clean up by revoking the blob URL
           window.URL.revokeObjectURL(url);
-          showNotification(
-            "success",
-            "Success downloading File :" + file.fileName
-          );
+          toast.update(toastID,{
+            render:"Success downloading File :" + file.fileName,
+            type:"success",
+            isLoading:false,
+            autoClose:3000
+          })
         } else {
-          showNotification(
-            "error",
-            "Failed Downloading File :" + file.fileName
-          );
+          toast.update(toastID,{
+            render:"Failed Downloading File :" + file.fileName,
+            type:"error",
+            isLoading:false,
+            autoClose:3000
+          })
         }
+      })
+      .catch((error) => {
+        toast.update(toastID,{
+          render:"Failed Downloading File :" + file.fileName,
+          type:"error",
+          isLoading:false,
+          autoClose:3000
+        })
       });
   };
 
@@ -103,11 +114,7 @@ const CommentCard = ({ data, onAction }) => {
     const check = confirm("Are you sure want to delete this file?");
     if (check) {
       const filePath = encodeURIComponent(fileObject.filePath);
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Deleting file in server",
-      });
+      const toastID=toast.loading("Deleting file in server")
       await axios
         .delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`, {
           headers: {
@@ -116,33 +123,18 @@ const CommentCard = ({ data, onAction }) => {
           },
         })
         .then((response) => {
-          if (response.status === 200) {
-            showNotification("success", "Success deleting file in server!");
-          } else {
-            showNotification("Failed deleting file in server!");
-          }
+          toast.update(toastID,{
+            render:response.status===200?"Success deleting file in server!":"Failed deleting file in server!",
+            type:response.status===200?"success":"error",
+            isLoading:false,
+            autoClose:3000
+          })
         });
     }
   };
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
-
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
   return (
     <>
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+  <ToastContainer/>
       <article className="p-6 text-base bg-slate-100 rounded-lg  m-5">
         <footer className="flex justify-between items-center mb-2">
           <div className="flex items-center justify-center gap gap-2">
@@ -255,7 +247,7 @@ const CommentModal = ({ id, onAction }) => {
   const handleModalOpen = (e) => {
     setIsModalOpen(true);
   };
-  return isModalOpen === true ? (
+  return isModalOpen ? (
     <div className="">
       <select
         id="dropdown"

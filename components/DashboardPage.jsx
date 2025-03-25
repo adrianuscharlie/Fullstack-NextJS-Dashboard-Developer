@@ -1,12 +1,10 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import ProjectsTable from "@/components/Projects";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
 import {Mail,User2,FolderKanban} from 'lucide-react'
 const DashboardPage = ({ user, projects }) => {
   return (
-    <section className="page p-4 sm:ml-64 flex flex-col px-10 gap-5">
+    <section className="page  p-4 flex flex-col px-10 gap-5">
       <div className="flex justify-start items-end gap-5">
         <span className="w-20 text-gray-100">
           <svg

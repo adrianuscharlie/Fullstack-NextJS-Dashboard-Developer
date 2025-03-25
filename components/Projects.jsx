@@ -27,7 +27,7 @@ const ProjectsTable = ({data}) => {
     // const [projects,setProjects]=useState(data);
     const router=useRouter();
   return (
-    <section className='w-full mb-24 flex justify-start items-center'>
+    <div className='w-full mb-24 flex justify-start items-center'>
         <table className="w-full  border-none text-sm text-left rtl:text-right text-gray-500">
             <thead className='text-xs text-gray-700 uppercase bg-gray-50 '>
                 <tr>
@@ -55,7 +55,7 @@ const ProjectsTable = ({data}) => {
                 ))}
             </tbody>
         </table>
-    </section>
+    </div>
   )
 }
 

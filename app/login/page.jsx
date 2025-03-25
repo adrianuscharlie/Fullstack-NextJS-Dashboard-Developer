@@ -16,13 +16,12 @@ const Login = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
+  // Redirect if already logged in
   useEffect(() => {
-    if (status === "loading") return;
-    if (session) {
-      router.push("/");
-      return;
+    if (status === "authenticated") {
+      router.push("/"); // Redirect to home if authenticated
     }
-  }, [session, router,status]);
+  }, [status, router]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -30,36 +29,38 @@ const Login = () => {
     setError(null);
 
     const result = await signIn("credentials", {
-      redirect: false,
+      redirect: true, 
       username,
       password,
     });
 
-    if (!result.ok) {
-      setError("Invalid username or password. Please try again.");
-    }
+    // setLoading(false);
+
+    // if (result?.error) {
+    //   setError("Invalid username or password. Please try again.");
+    // } else {
+    //   router.push("/"); 
+    // }
   };
 
-  if (loading) {
-    return <Loading />;
+  if (status === "authenticated") {
+    return ; // Show loading while redirecting
   }
 
   return (
     <section className="flex bg-slate-100 flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-      <div className="w-full bg-white rounded-lg shadow r sm:max-w-md xl:p-0  ">
+      <div className="w-full bg-white rounded-lg shadow sm:max-w-md xl:p-0">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
           <Image width={100} src={Logo} alt="Logo KIS" />
-          <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl ">
+          <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
             Login Dashboard Project KIS
           </h1>
-          {error && (
-            <p className="text-red-500 text-sm font-medium">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
           <form className="space-y-4 md:space-y-6" onSubmit={handleLogin}>
             <div>
               <label
                 htmlFor="username"
-                className="block mb-2 text-sm font-medium text-gray-900 "
+                className="block mb-2 text-sm font-medium text-gray-900"
               >
                 Your username
               </label>
@@ -68,7 +69,7 @@ const Login = () => {
                 type="text"
                 name="username"
                 id="username"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
+                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 placeholder="adrianuscharlie"
                 required
               />
@@ -76,7 +77,7 @@ const Login = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block mb-2 text-sm font-medium text-gray-900 "
+                className="block mb-2 text-sm font-medium text-gray-900"
               >
                 Password
               </label>
@@ -86,7 +87,7 @@ const Login = () => {
                 name="password"
                 id="password"
                 placeholder="••••••••"
-                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 "
+                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                 required
               />
             </div>

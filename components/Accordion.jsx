@@ -5,7 +5,7 @@ import AddVersionModal from "@/components/AddVersionModal";
 import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { CircleFadingPlus } from "lucide-react";
-const Accordion = ({ title, projects, isOpen, toggleAccordion }) => {
+const Accordion = ({ title, projects, isOpen, toggleAccordion,users }) => {
   const { data: session, status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleModal=()=>{
@@ -48,6 +48,7 @@ const Accordion = ({ title, projects, isOpen, toggleAccordion }) => {
                 type={projects[0].type}
                 details={projects[0].details}
                 projects={projects}
+                users={users}
               />
             ) : null}
           </div>

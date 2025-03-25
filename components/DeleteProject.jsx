@@ -1,22 +1,15 @@
 "use client";
 import React from "react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
-import Notification from "./Notification";
 import axios from "axios";
+import { ToastContainer,toast } from "react-toastify";
 const DeleteProject = ({ projects }) => {
   const { data: session } = useSession();
-  const router = useRouter();
   const [projectVersion, setProjectVersion] = useState([]);
   const [project, setProject] = useState({
     project_name: "",
     version: "",
-  });
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    type: "", // 'success', 'error', 'general'
   });
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
@@ -48,27 +41,13 @@ const DeleteProject = ({ projects }) => {
       ["version"]: foundProject.version,
     }));
   };
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
-
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
   const handleDelete = async (event) => {
     event.preventDefault();
     const userConfirmed = window.confirm(
       "Are you sure you want to delete this project?"
     );
     if (userConfirmed) {
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Deleting Project",
-      });
+      const toastID=toast.loading("Deleting project....");
       await axios
         .delete(
           process.env.NEXT_PUBLIC_BASE_URL +
@@ -81,24 +60,30 @@ const DeleteProject = ({ projects }) => {
           }
         )
         .then((response) => {
-          if (response.status === 200) {
-            showNotification("success", response.data.message);
-          } else {
-            showNotification("error", response.data.message);
-          }
+          toast.update(toastID,{
+            render:response.data.message,
+            type:response.status===200?"success":"error",
+            isLoading:false,
+            autoClose:3000
+          })
+          setProject({
+            project_name: "",
+            version: "",
+          })
         })
-        .catch((error) => console.log(error));
+        .catch((error) => {
+          toast.update(toastID,{
+            render:error,
+            type:"error",
+            isLoading:false,
+            autoClose:3000
+          })
+        });
     }
   };
   return (
     <>
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+      <ToastContainer/>
       <form
         className="grid grid-cols-[1fr,3fr] gap-4  text-lg"
         onSubmit={handleDelete}

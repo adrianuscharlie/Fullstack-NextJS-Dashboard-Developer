@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
-const handler = NextAuth({
+
+ const authOptions = {
   secret: process.env.AUTH_SECRET,
   providers: [
     CredentialsProvider({
@@ -16,39 +17,23 @@ const handler = NextAuth({
           const response = await axios.post(
             url,
             {
-              userName: credentials.username, // Match property names in .NET API
+              userName: credentials.username,
               password: credentials.password,
             },
             {
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               timeout: 10000, // 10 seconds timeout
             }
           );
 
-          const data = response.data;
-
-          // Check if the response data includes the expected properties
-          const { token, user } = data;
+          const { token, user } = response.data;
           if (user && token) {
-            return { ...user, token }; // Pass token and user details back to NextAuth
+            return { ...user, token }; 
           } else {
-            throw new Error(
-              "Authentication failed: Missing token or user data"
-            );
+            throw new Error("Authentication failed: Missing token or user data");
           }
         } catch (error) {
-          // Log detailed error for debugging
           console.error("Error during authorization:", error.message || error);
-
-          // Optionally, handle specific error types if needed
-          if (error.response && error.response.data) {
-            console.error("Server response error:", error.response.data);
-          } else if (error.code === "ECONNABORTED") {
-            console.error("Request timed out");
-          }
-
           return null;
         }
       },
@@ -58,13 +43,11 @@ const handler = NextAuth({
     signIn: "/login",
     signOut: "/login",
   },
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.token; // Add token from user object
+        token.accessToken = user.token;
         token.user = {
           username: user.username,
           email: user.email,
@@ -83,6 +66,7 @@ const handler = NextAuth({
       return session;
     },
   },
-});
+};
 
-export { handler as GET, handler as POST };
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST, authOptions }; 

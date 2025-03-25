@@ -18,7 +18,7 @@ const Project = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (status === "loading") return; 
+    if (status === "loading") return;
 
     if (!session) {
       router.push("/login");
@@ -43,8 +43,6 @@ const Project = () => {
     fetchProject();
   }, [session?.user?.role, status]);
 
-
-
   const handleModalOpen = () => {
     setIsModalOpen(true);
   };
@@ -60,9 +58,7 @@ const Project = () => {
     setLoading(value);
   };
 
-  if (loadingProjects) {
-    return <Loading />;
-  }
+
 
   if (!session || !session.user) {
     router.push("/login");
@@ -70,67 +66,62 @@ const Project = () => {
   }
 
   return project ? (
-    <>
-      <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
-        <div className="flex items-center justify-start mt-14 gap-3">
-          <h1 className="text-start text-4xl font-semibold  text-sky-500">
-            {project.project_name}
-          </h1>
-          <button
-            className="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
-            onClick={handleModalOpen}
-          >
-            <Pencil />
-          </button>
-        </div>
-        <div className="grid gap-5 text-lg">
-          <p>Details Project on this version:</p>
-          <div className="w-full flex gap-2 items-center justify-start">
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500">
-              <tbody>
-                <tr className="odd:bg-white even:bg-gray-50">
-                  <td>Project Type</td>
-                  <td>{project.type}</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-50">
-                  <td>Version</td>
-                  <td>{project.version}</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-50">
-                  <td>Status</td>
-                  <td>{project.status}</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-50">
-                  <td>Developer</td>
-                  <td>{project.developer}</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-50 ">
-                  <td>Support</td>
-                  <td>{project.support}</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-50 ">
-                  <td>Notes</td>
-                  <td style={{ whiteSpace: "pre-line" }}>{project.notes}</td>
-                </tr>
-              </tbody>
-            </table>
+    <section className="p-4 flex flex-col px-10 gap-10">
+      <div className="flex items-center justify-start mt-14 gap-3">
+        <h1 className="text-start text-4xl font-semibold  text-sky-500">
+          {project.project_name}
+        </h1>
+        <button
+          className="flex p-2.5 text-yellow-500 rounded-xl hover:rounded-3xl "
+          onClick={handleModalOpen}
+        >
+          <Pencil />
+        </button>
+      </div>
+      <div className="grid gap-5 text-lg">
+        <p>Details Project on this version:</p>
+        <div className="w-full flex gap-2 items-center justify-start">
+          <table className="w-full text-sm text-left rtl:text-right text-gray-500">
+            <tbody>
+              <tr className="odd:bg-white even:bg-gray-50">
+                <td>Project Type</td>
+                <td>{project.type}</td>
+              </tr>
+              <tr className="odd:bg-white even:bg-gray-50">
+                <td>Version</td>
+                <td>{project.version}</td>
+              </tr>
+              <tr className="odd:bg-white even:bg-gray-50">
+                <td>Status</td>
+                <td>{project.status}</td>
+              </tr>
+              <tr className="odd:bg-white even:bg-gray-50">
+                <td>Developer</td>
+                <td>{project.developer}</td>
+              </tr>
+              <tr className="odd:bg-white even:bg-gray-50 ">
+                <td>Support</td>
+                <td>{project.support}</td>
+              </tr>
+              <tr className="odd:bg-white even:bg-gray-50 ">
+                <td>Notes</td>
+                <td style={{ whiteSpace: "pre-line" }}>{project.notes}</td>
+              </tr>
+            </tbody>
+          </table>
 
-            {isModalOpen ? (
-              <UpdateProjectModal
-                isOpen={isModalOpen}
-                onClose={handleModalClose}
-                handleSubmit={handleSubmitModal}
-                project={project}
-              />
-            ) : null}
-          </div>
+          {isModalOpen ? (
+            <UpdateProjectModal
+              isOpen={isModalOpen}
+              onClose={handleModalClose}
+              handleSubmit={handleSubmitModal}
+              project={project}
+            />
+          ) : null}
         </div>
-      </section>
-      <CommentSection
-        project={project}
-        handleSetLoading={handleSetLoading}
-      />
-    </>
+      </div>
+      <CommentSection project={project} handleSetLoading={handleSetLoading} />
+    </section>
   ) : (
     <>
       <section className="p-4 sm:ml-64 h-screen flex justify-center items-center">

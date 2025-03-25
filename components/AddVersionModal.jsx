@@ -1,20 +1,23 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
+import Loading from "./Loading";
 import axios from "axios";
+import { ToastContainer,toast } from "react-toastify";
+import { getAllUser } from "@/lib/api";
 const AddVersionModal = ({
   onClose,
   projectName,
   type,
   details,
   projects,
+  users
 }) => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({
     project_name: projectName,
     type: type,
@@ -25,21 +28,7 @@ const AddVersionModal = ({
     support: "Hali Wimboko",
     status: "Development",
   });
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    type: "", // 'success', 'error', 'general'
-  });
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
 
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -54,13 +43,9 @@ const AddVersionModal = ({
         return obj.version === value;
       });
     };
+    const toastID=toast.loading("Creating new version....")
     const isValid = isVersionExist(projects, formData.version);
     if (!isValid) {
-      setNotification({
-        show: true,
-        type: "general",
-        title: "Uploading New Version",
-      });
       await axios
         .post(process.env.NEXT_PUBLIC_BASE_URL + `/api/projects`, formData, {
           headers: {
@@ -70,36 +55,34 @@ const AddVersionModal = ({
         })
         .then((response) => {
           if (response.status === 200) {
-            showNotification("success", response.data);
+            toast.update(toastID,{
+              render:response.data,
+              type:"success",
+              isLoading:false,
+              autoClose:3000
+            })
             router.push(
               "/projects/" + formData.project_name + "  " + formData.version
             );
           } else {
-            showNotification("error", response.data);
+            toast.update(toastID,{
+              render:response.data,
+              type:"error",
+              isLoading:false,
+              autoClose:3000
+            })
           }
         });
-    } else {
-      setNotification({
-        show: true,
-        type: "error",
-        title: "Version not valid",
-      });
+    } 
+      else {
+        toast.update(toastID,{
+          render:"Version not valid",
+          type:"error",
+          isLoading:false,
+          autoClose:3000
+        })
     }
   };
-  useEffect(() => {
-    const fetchUsers = async () => {
-      await axios
-        .get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-            "Content-Type": "application/json", // Optional: set content type if needed
-          },
-        })
-        .then((response) => setUsers(response.data))
-        .catch((error) => console.log(error.message));
-    };
-    fetchUsers();
-  }, [router]);
   return (
     <>
       {notification.show && (
@@ -109,6 +92,7 @@ const AddVersionModal = ({
           onClose={closeNotification}
         />
       )}
+      <Suspense fallback={<Loading />}>
       <div className="fixed top-0 right-0 left-0 z-40 overflow-y-auto overflow-x-hidden flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-100 bg-opacity-50">
         <form
           className="relative p-4 w-full max-w-4xl max-h-full"
@@ -259,6 +243,7 @@ const AddVersionModal = ({
           </div>
         </form>
       </div>
+      </Suspense>
     </>
   );
 };

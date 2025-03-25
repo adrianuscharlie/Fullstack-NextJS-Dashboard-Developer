@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Notification from "./Notification";
+import { ToastContainer,toast } from "react-toastify";
 import axios from "axios";
 const InputProject = ({ users }) => {
   const { data: session, status } = useSession();
@@ -43,7 +44,7 @@ const InputProject = ({ users }) => {
 
   const handleInput = async (event) => {
     event.preventDefault();
-    showNotification("general", "Uploading new Project");
+    const toastID=toast.loading("Uploading new Project")
     await axios
       .post(process.env.NEXT_PUBLIC_BASE_URL + `/api/projects`, project, {
         headers: {
@@ -53,25 +54,34 @@ const InputProject = ({ users }) => {
       })
       .then((response) => {
         if (response.status === 200) {
-          showNotification("success", "Success input new project!");
+          toast.update(toastID,{
+            render:"Success input new project!",
+            type:"success",
+            isLoading:false,
+            autoClose:3000
+          })
           router.push(
             `/projects/${project.project_name + "  " + project.version}`
           );
         } else {
-          showNotification("error", "Failed input new project!");
+          toast.update(toastID,{
+            render:"Failed input new project!",
+            type:"error",
+            isLoading:false,
+            autoClose:3000
+          })
         }
       })
-      .catch((error) => showNotification("error", "Failed input new project!"));
+      .catch((error) => toast.update(toastID,{
+        render:"Failed input new project!",
+        type:"error",
+        isLoading:false,
+        autoClose:3000
+      }));
   };
   return (
     <>
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+      <ToastContainer/>
       <form
         className="grid grid-cols-[1fr,3fr] gap-4 text-lg"
         onSubmit={handleInput}

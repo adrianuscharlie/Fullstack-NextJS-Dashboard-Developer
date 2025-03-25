@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import CommentCard from "./Comment";
 import { useSession } from "next-auth/react";
 import Loading from "./Loading";
-import Notification from "./Notification";
+import { ToastContainer, toast } from "react-toastify";
 import {
   CloudUpload,
   File,
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const CommentSection = ({ project, handleSetLoading }) => {
+const CommentSection = ({ project }) => {
   const { data: session } = useSession();
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
@@ -42,21 +42,6 @@ const CommentSection = ({ project, handleSetLoading }) => {
   );
   const [ccText, setCcText] = useState("");
   const [isChecked, setChecked] = useState(false);
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    type: "", // 'success', 'error', 'general'
-  });
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
-
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
   useEffect(() => {
     const fetchComment = async () => {
       await axios
@@ -123,170 +108,180 @@ const CommentSection = ({ project, handleSetLoading }) => {
     const url = isEditing
       ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${commentObject.project_name}  ${commentObject.version}/comments/${editTogle}`
       : `${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${commentObject.project_name}  ${commentObject.version}/comments`;
-    showNotification("general", actionTitle);
-    await axios({
-      method: method,
-      url: url,
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        "Content-Type": "application/json",
-      },
-      data: commentObject, // Use 'data' instead of 'body' for axios
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          showNotification("success", response.data.message);
-          commentObject.date = response.data.date;
-          if (!isEditing) {
-            commentObject.id = response.data.id;
-            commentObject.folder = project.project_name;
-          }
-          const newComments = isEditing
-            ? comments.map((item) =>
-                String(item.id) === String(commentObject.id)
-                  ? { ...commentObject }
-                  : item
-              )
-            : [commentObject, ...comments];
-          
-          setComments(newComments);
-          console.log(newComments,comments)
-        } else {
-          showNotification(
-            "error",
-            response.message || "Failed to submit comment"
-          );
-          return;
+
+    const toastComment = toast.loading(actionTitle);
+    try {
+      const response = await axios({
+        method: method,
+        url: url,
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: commentObject,
+      });
+      if (response.status === 200) {
+        commentObject.date = response.data.date;
+        if (!isEditing) {
+          commentObject.id = response.data.id;
+          commentObject.folder = project.project_name;
         }
-      })
-      .catch((error) => console.log(error.message));
+        const newComments = isEditing
+          ? comments.map((item) =>
+              String(item.id) === String(commentObject.id)
+                ? { ...commentObject }
+                : item
+            )
+          : [commentObject, ...comments];
+        setComments(newComments);
+      }
+      await toast.update(toastComment, {
+        render: response.data.message,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (error) {
+      toast.update(toastComment, {
+        render: error.response?.data?.message || "Failed to submit comment",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } 
 
-    // Handle file uploads if any files are selected
+    // File Upload Handling
     if (selectedFiles.length > 0) {
-      showNotification("general", "Uploading file into server...");
-
+      const toastFiles = toast.loading("Uploading file into server...",{
+        autoClose:3000
+      });
       const formData = new FormData();
       formData.append("header", JSON.stringify(commentObject));
       selectedFiles.forEach((file, index) => {
         formData.append(`file_${commentObject.id}_${index + 1}`, file);
       });
 
-      await axios
-        .post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files`, formData, {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-          },
-        })
-        .then((response) => {
-          showNotification(
-            response.status === 200 ? "success" : "error",
-            "Success saving files into Server!"
-          );
-        })
-        .catch((error) => alert(error.message));
+      try {
+        const response=await axios.post(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/files`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+
+        if(response.status===200){
+          toast.update(toastFiles, {
+            render: "Success saving files into Server!",
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+          });
+        }
+      } catch (error) {
+        toast.update(toastFiles, {
+          render: `File upload failed: ${error.message}`,
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      }
     }
 
+    // Email Notification Handling
     if (isChecked) {
-      await axios
-        .get(
+      try {
+        const response = await axios.get(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/email/${project.project_name}_${project.version}`,
           {
             headers: {
-              Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-              "Content-Type": "application/json", // Optional: set content type if needed
+              Authorization: `Bearer ${session.accessToken}`,
+              "Content-Type": "application/json",
             },
           }
-        )
-        .then(async (response) => {
-          const { emailDeveloper, emailSupport } = response.data;
-          let emailFrom = session.user.email;
-          let emailRecipient = emailDeveloper;
+        );
 
-          if (emailFrom === emailDeveloper) {
-            emailRecipient = emailSupport;
-          } else if (emailFrom === emailSupport) {
-            emailRecipient = emailDeveloper;
-          } else {
-            emailRecipient += `;${emailSupport}`;
-          }
-          showNotification(
-            "general",
-            "Sending email notification, please wait..."
-          );
-          const emailObject = {
-            subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
-            body: text,
-            from: emailFrom,
-            to: emailRecipient,
-            cc: [...emailCC].join(";"),
-          };
+        const { emailDeveloper, emailSupport } = response.data;
+        let emailFrom = session.user.email;
+        let emailRecipient = emailDeveloper;
 
-          const emailFormData = new FormData();
-          emailFormData.append("email", JSON.stringify(emailObject));
-          selectedFiles.forEach((file, index) => {
-            emailFormData.append(`file_${index + 1}`, file);
-          });
+        if (emailFrom === emailDeveloper) {
+          emailRecipient = emailSupport;
+        } else if (emailFrom === emailSupport) {
+          emailRecipient = emailDeveloper;
+        } else {
+          emailRecipient += `;${emailSupport}`;
+        }
 
-          await axios
-            .post(
+        const toastEmail = toast.loading(
+          "Sending email notification, please wait..."
+        );
+
+        const emailObject = {
+          subject: `[${commentObject.status}] Program ${project.project_name} Version ${project.version}`,
+          body: text,
+          from: emailFrom,
+          to: emailRecipient,
+          cc: [...emailCC].join(";"),
+        };
+
+        const emailFormData = new FormData();
+        emailFormData.append("email", JSON.stringify(emailObject));
+        selectedFiles.forEach((file, index) => {
+          emailFormData.append(`file_${index + 1}`, file);
+        });
+
+        let emailSent = false;
+        for (let i = 0; i < 3; i++) {
+          try {
+            const emailResponse = await axios.post(
               `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
               emailFormData,
               {
                 headers: {
-                  Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-                },
-              }
-            )
-            .then(async (response) => {
-              if (!response.status === 200) {
-                for (let i = 0; i < 3; i++) {
-                  showNotification("general", "Resending email...");
-                  const response = axios.post(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-                    emailFormData,
-                    {
-                      headers: {
-                        Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
-                      },
-                    }
-                  );
-                  if (response.status === 200) {
-                    showNotification("success", "Success sending email!");
-                    break;
-                  } else {
-                    showNotification("error", "Failed sending email!");
-                  }
-                }
-              } else {
-                showNotification("success", "Success sending email!");
-              }
-            });
-        })
-        .catch((error) => {
-          for (let i = 0; i < 3; i++) {
-            showNotification("general", "Resending email...");
-            const response = axios.post(
-              `${process.env.NEXT_PUBLIC_BASE_URL}/api/email`,
-              emailFormData,
-              {
-                headers: {
-                  Authorization: `Bearer ${session.accessToken}`, // Include the Bearer token in Authorization header
+                  Authorization: `Bearer ${session.accessToken}`,
                 },
               }
             );
-            if (response.status === 200) {
-              showNotification("success", "Success sending email!");
-              break;
-            } else {
-              showNotification("error", "Failed sending email!");
-            }
-          }
-        });
 
-      // Update UI and clear form
+            if (emailResponse.status === 200) {
+              toast.update(toastEmail, {
+                render: "Success sending email!",
+                type: "success",
+                isLoading: false,
+                autoClose: 3000,
+              });
+              emailSent = true;
+              break;
+            }
+          } catch (error) {
+            toast.update(toastEmail, {
+              render: `Retry ${i + 1}/3 failed: ${error.message}`,
+              type: "error",
+              isLoading: false,
+              autoClose: 3000,
+            });
+          }
+        }
+
+        if (!emailSent) {
+          toast.update(toastEmail, {
+            render: "Failed to send email after 3 attempts",
+            type: "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
+        }
+      } catch (error) {
+        toast.error(`Error fetching email details: ${error.message}`);
+      }
     }
+
+    // Reset state and close modal
     resetState();
-    setIsOpen(!isOpen)
+    setIsOpen(!isOpen);
   };
 
   const handleFileChange = (event) => {
@@ -319,7 +314,7 @@ const CommentSection = ({ project, handleSetLoading }) => {
       const check = confirm("Are you sure want to delete this file?");
       if (check) {
         const filePath = encodeURIComponent(fileObject.filePath);
-        showNotification("general", "Deleting file in server");
+        const toastDelete = toast.loading("Deleting file in server");
         await axios
           .delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/files/${filePath}`, {
             headers: {
@@ -328,19 +323,17 @@ const CommentSection = ({ project, handleSetLoading }) => {
             },
           })
           .then((response) => {
-            if (response.status === 200) {
-              showNotification("success", response.data.message);
-            } else {
-              showNotification("error", response.data.message);
-            }
+            toast.update(toastDelete, {
+              render: response.data.message,
+              type: response.status === 200 ? "success" : "error",
+              isLoading: false,
+              autoClose: 3000,
+            });
           })
           .catch((error) => console.log(error.message));
       }
     }
   };
-  if (loadingComments) {
-    return <Loading />;
-  }
   const handleSelectChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);
@@ -360,6 +353,7 @@ const CommentSection = ({ project, handleSetLoading }) => {
     } else {
       const confirm = window.confirm("Are you sure?");
       if (confirm) {
+        const toastComment = toast.loading("Deleting comment...");
         await axios
           .delete(
             process.env.NEXT_PUBLIC_BASE_URL +
@@ -382,7 +376,19 @@ const CommentSection = ({ project, handleSetLoading }) => {
               setComments((prevItems) =>
                 prevItems.filter((item) => item.id !== id)
               );
-              showNotification("success", response.data.message);
+              toast.update(toastComment, {
+                render: "Success deleting comment",
+                type: "success",
+                isLoading: false,
+                autoClose: 3000,
+              });
+            } else {
+              toast.update(toastComment, {
+                render: "Failed deleting comment",
+                type: "error",
+                isLoading: false,
+                autoClose: 3000,
+              });
             }
           })
           .catch((error) => console.log(error.message));
@@ -392,14 +398,8 @@ const CommentSection = ({ project, handleSetLoading }) => {
   };
 
   return (
-    <section className="p-4 sm:ml-64 flex flex-col px-10 gap-10">
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+    <section className="flex flex-col ">
+      <ToastContainer />
       {session.user.namaLengkap === project.developer ||
       session.user.namaLengkap === project.support ||
       session.user.role.includes("manager") ||

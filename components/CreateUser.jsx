@@ -1,10 +1,9 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { ToastContainer,toast } from "react-toastify";
 import Notification from "./Notification";
 import axios from "axios";
 const CreateUser = () => {
-  const router = useRouter();
   const [userData, setUserData] = useState({
     username: "",
     namaLengkap: "",
@@ -14,21 +13,6 @@ const CreateUser = () => {
     isActive: true,
   });
 
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    type: "", // 'success', 'error', 'general'
-  });
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
-
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
 
   const handleUser = (e) => {
     const { name, value } = e.target;
@@ -40,7 +24,7 @@ const CreateUser = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    showNotification("general", "Creating new user...");
+    const toastID=toast.loading("Creating new user....")
     await axios
       .post(process.env.NEXT_PUBLIC_BASE_URL + `/api/user`, userData, {
         headers: {
@@ -49,20 +33,17 @@ const CreateUser = () => {
         },
       })
       .then((response) => {
-        if (response.status === 200)
-          showNotification("success", "Success creating new User!");
-        else showNotification("error", "Failed creating new user!");
+        toast.update(toastID,{
+          render:response.status===200?"Success creating new User!":"Failed creating new user!",
+          type:response.status===200?"success":"error",
+          isLoading:false,
+          autoClose:3000
+        })
       });
   };
   return (
     <>
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+    <ToastContainer/>
       <form
         className="grid grid-cols-[1fr,3fr] gap-4 text-lg"
         onSubmit={handleSubmit}

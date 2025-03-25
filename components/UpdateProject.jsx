@@ -2,8 +2,8 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Notification from "./Notification";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
 const UpdateProject = ({ users, projects }) => {
   const { data: session, status } = useSession();
   const [projectVersion, setProjectVersion] = useState([]);
@@ -28,21 +28,6 @@ const UpdateProject = ({ users, projects }) => {
     "Release",
   ];
   const [options, setOptions] = useState(choice);
-  const [notification, setNotification] = useState({
-    show: false,
-    title: "",
-    type: "", // 'success', 'error', 'general'
-  });
-  const closeNotification = () => {
-    setNotification({ ...notification, show: false });
-  };
-
-  const showNotification = async (type, title) => {
-    setNotification({ show: true, type, title });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
   const handleSelectedProject = (e) => {
     const projectName = e.target.value;
     const selectedProject = projects.filter(
@@ -93,11 +78,7 @@ const UpdateProject = ({ users, projects }) => {
   };
   const handleInput = async (event) => {
     event.preventDefault();
-    setNotification({
-      show: true,
-      type: "general",
-      title: "Updating Project",
-    });
+    const toastID = toast.loading("Updating project....");
 
     await axios
       .put(
@@ -113,21 +94,30 @@ const UpdateProject = ({ users, projects }) => {
       )
       .then((response) => {
         if (response.status === 200) {
-          showNotification("success", "Success updating project");
+          toast.update(toastID, {
+            render:
+              response.status === 200
+                ? "Success updating project"
+                : "Failed updating project",
+            type: response.status === 200 ? "success" : "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
           router.push(`/projects/${project.project_name}  ${project.version}`);
-        } else showNotification("error", "Failed updating project");
+        } else {
+          toast.update(toastID, {
+            render: "Failed updating project",
+            type: "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
+        }
       });
   };
 
   return (
     <>
-      {notification.show && (
-        <Notification
-          type={notification.type}
-          title={notification.title}
-          onClose={closeNotification}
-        />
-      )}
+      <ToastContainer />
       <form
         className="grid grid-cols-[1fr,3fr] gap-4  text-lg"
         onSubmit={handleInput}

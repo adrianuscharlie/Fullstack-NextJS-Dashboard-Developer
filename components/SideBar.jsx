@@ -1,147 +1,106 @@
 "use client";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { signIn, signOut, useSession, getProviders } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import Logo from "../public/logokis.jpg";
-import {Home,FolderKanban,NotebookPen,MailPlus,Settings, LogOut} from 'lucide-react'
-const Sidebar = () => {
+import {
+  Home,
+  FolderKanban,
+  NotebookPen,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+
+export default function Sidebar() {
+  const { data: session,status } = useSession();
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const [providers, setProviders] = useState(null);
-  const [dropdown, setDropDown] = useState(false);
-  useEffect(() => {
-    if (status === "loading") return;
-    const setUpProviders = async () => {
-      const response = await getProviders();
-      setProviders(response);
-    };
-    setUpProviders();
-  }, []);
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleSignOut = async () => {
-    await signOut({redirect:false}).then(()=>router.push("/login"))
-    
+    await signOut({ redirect: false });
+    router.push("/login");
   };
 
-  return session? (
-    <>
-      <button
-        data-drawer-target="sidebar-multi-level-sidebar"
-        data-drawer-toggle="sidebar-multi-level-sidebar"
-        aria-controls="sidebar-multi-level-sidebar"
-        type="button"
-        onClick={() => setDropDown(!dropdown)}
-        className="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-      >
-        <span className="sr-only">Open sidebar</span>
-        <svg
-          className="w-6 h-6"
-          aria-hidden="true"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            clipRule="evenodd"
-            fillRule="evenodd"
-            d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
-          ></path>
-        </svg>
-      </button>
-      {dropdown && (
-        <div className=" sm:hidden absolute flex flex-col gap-3 mx-3 w-1/3 rounded-md bg-slate-100 px-5 py-2.5 text-md font-semibold text-sky-500">
-          <Link href={"/"} className="">
-            Home
-          </Link>
-          <Link href={"/projects"} className="">
-            Projects
-          </Link>
-          <Link href={"/ba"} className="">
-            Create BA
-          </Link>
-          {/* <Link href={"/email"} className="">
-            Send Email
-          </Link> */}
-          <Link href={"/configuration"} className="">
-            Configuration
-          </Link>
-          <button onClick={handleSignOut} className="text-start">
-            Logout
-          </button>
-        </div>
-      )}
-      <aside
-        id="sidebar-multi-level-sidebar"
-        className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0"
-        aria-label="Sidebar"
-      >
-        <div className="h-full flex flex-col justify-between px-3 py-4 overflow-y-auto bg-gray-800 text-white ">
-          <div className="px-3 py-4 overflow-y-auto">
-            <ul className="space-y-5 text-lg font-semibold ml-5 h-full justify-co">
-              <li>
-                <Link href={"/"} className="hover:text-sky-500">
-                  <Image alt="logo" src={Logo} style={{ width: "100px" }} />
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-white hover:text-sky-500 flex gap-3 justify-start items-center"
-                  href={"/"}
-                >
-                  <Home/>
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="hover:text-sky-500 flex justify-start items-center gap-3"
-                  href={"/projects"}
-                >
-                  <FolderKanban/>
-                  Projects
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="hover:text-sky-500 flex justify-start items-center gap-3"
-                  href={"/ba"}
-                >
-                  <NotebookPen />
-                  Create BA
-                </Link>
-              </li>
-              {/* <li>
-                <Link
-                  className="hover:text-sky-500 text-white flex justify-start items-center gap-3"
-                  href={"/email"}
-                >
-                  <MailPlus/>
-                  Send Email
-                </Link>
-              </li> */}
-              <li>
-                <Link
-                  className="hover:text-sky-500 text-white flex justify-start items-center gap-3"
-                  href={"/configuration"}
-                >
-                  <Settings/>
-                  Configuration
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <button
-            className="px-3 text-white hover:text-sky-500 py-4 flex gap-5 items-center justify-start"
-            onClick={handleSignOut}
-          >
-            <LogOut/>
-            <p className="text-lg font-semibold ">Logout</p>
-          </button>
-        </div>
-      </aside>
-    </>
-  ):<></>;
-};
+  if (!session) return null;
+  if(status==="loading") return null;
 
-export default Sidebar;
+  return (
+    <aside className="top-0 left-0 z-40" >
+      {/* Sidebar */}
+      <div
+        className={`h-full bg-gray-800 text-white transition-all duration-300 ${
+          isExpanded ? "w-48" : "w-16"
+        }`}
+      >
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="p-3 text-white  hover:bg-gray-700 w-full flex justify-start"
+        >
+          <div
+            className={`flex items-center space-x-2 ${
+              isExpanded ? "justify-start" : "justify-center"
+            }`}
+          >
+            <Image alt="logo" src={Logo} width={isExpanded ? 100 : 40} />
+          </div>
+        </button>
+
+        {/* Sidebar Content */}
+        <div className="px-4 py-4 flex flex-col">
+          {/* Logo */}
+
+          {/* Navigation Links */}
+          <ul className="mt-5 space-y-4">
+            <li>
+              <Link
+                href="/"
+                className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md"
+              >
+                <Home />
+                {isExpanded && <span>Home</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/projects"
+                className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md"
+              >
+                <FolderKanban />
+                {isExpanded && <span>Projects</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/ba"
+                className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md"
+              >
+                <NotebookPen />
+                {isExpanded && <span>Create BA</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/configuration"
+                className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md"
+              >
+                <Settings />
+                {isExpanded && <span>Configuration</span>}
+              </Link>
+            </li>
+          </ul>
+          {/* Logout Button */}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-md w-full"
+          >
+            <LogOut />
+            {isExpanded && <span>Logout</span>}
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
