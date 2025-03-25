@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Logo from "@/public/logokis.jpg";
 import Image from "next/image";
 import Link from "next/link";
-import Loading from "@/components/Loading";
 import { useSession } from "next-auth/react";
+import Loading from "@/components/Loading";
 
 const Login = () => {
   const { data: session, status } = useSession();
@@ -15,36 +15,40 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
-
-  // Redirect if already logged in
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/"); // Redirect to home if authenticated
+      router.push("/");
     }
   }, [status, router]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
+    if (loading) return; // Prevent multiple requests
+
     setLoading(true);
     setError(null);
 
     const result = await signIn("credentials", {
-      redirect: true, 
+      redirect: false,
       username,
       password,
     });
 
-    // setLoading(false);
+    setLoading(false);
 
-    // if (result?.error) {
-    //   setError("Invalid username or password. Please try again.");
-    // } else {
-    //   router.push("/"); 
-    // }
+    if (result?.error) {
+      setError("Invalid username or password. Please try again.");
+    } else {
+      router.push("/");
+    }
   };
 
-  if (status === "authenticated") {
-    return ; // Show loading while redirecting
+  if (status === "loading") {
+    return (
+      <div className="flex w-full items-center justify-center h-screen">
+        <Loading/>
+      </div>
+    );
   }
 
   return (
@@ -97,8 +101,9 @@ const Login = () => {
             <button
               type="submit"
               className="w-full bg-sky-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white"
+              disabled={loading}
             >
-              Sign in
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </div>
