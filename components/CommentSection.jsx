@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 
 const CommentSection = ({ project }) => {
-  const { data: session } = useSession();
+  const { data: session } = useSession({ refetchOnWindowFocus: false });
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
   const [loadingComments, setLoadingComments] = useState(true);
